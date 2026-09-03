@@ -1,0 +1,29 @@
+## .NET & Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Configurações e Segredos Locais (Não vão para o GitHub)
+appsettings.Development.json
+appsettings.*.local.json
+secrets.json
+
+## Node & React
+node_modules/
+dist/
+.vite/
+*.local
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Logs e SO
+*.log
+Thumbs.db
+.DS_Store

@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0effe;
+  --color-brand-200: #bae0fd;
+  --color-brand-300: #7cc7fb;
+  --color-brand-400: #38a8f8;
+  --color-brand-500: #0e8ce9;
+  --color-brand-600: #0270c7;
+  --color-brand-700: #0359a1;
+  --color-brand-800: #074c85;
+  --color-brand-900: #0c3f6e;
+  --color-brand-950: #082849;
+}
+
+body {
+  background-color: #020617;
+  color: #f8fafc;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+.form-control {
+  width: 100%;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  background: #020617;
+  color: #f8fafc;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: #38a8f8;
+  box-shadow: 0 0 0 1px #38a8f8;
+}
+
+.client-auth label {
+  color: #334155;
+}
+
+.client-auth input {
+  border-color: #e7e5e4;
+  background: #fafaf9;
+  color: #0f172a;
+}
+
+.client-auth form .text-slate-300,
+.client-auth form .text-slate-400 {
+  color: #475569;
+}
+
+.client-shell main .bg-slate-900 {
+  background-color: #ffffff;
+}
+
+.client-shell main .border-slate-800 {
+  border-color: #e7e5e4;
+}
+
+.client-shell main .text-white {
+  color: #0f172a;
+}
+
+.client-shell main .text-slate-400 {
+  color: #64748b;
+}
+
+.client-shell main .text-slate-300 {
+  color: #475569;
+}
+
+.client-shell .form-control {
+  border-color: #e7e5e4;
+  background: #fafaf9;
+  color: #0f172a;
+}
+
+.client-shell main .bg-brand-600.text-white,
+.client-shell main .bg-brand-500.text-white,
+.client-shell main .bg-slate-950.text-white,
+.client-shell main .bg-emerald-600.text-white,
+.client-shell main .bg-rose-600.text-white {
+  color: #ffffff;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
