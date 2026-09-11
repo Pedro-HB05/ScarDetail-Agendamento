@@ -89,25 +89,45 @@ public static class DbInitializer
             var normalizedExpected = StringNormalizer.NormalizeText(expected.Nome);
             var normalizedAliases = expected.Aliases.Select(StringNormalizer.NormalizeText).ToHashSet(StringComparer.Ordinal);
 
-            var matchedPlan = existingPlans.FirstOrDefault(p =>
+            var matchingPlans = existingPlans.Where(p =>
             {
                 var normalizedCurrent = StringNormalizer.NormalizeText(p.Nome);
                 return normalizedCurrent == normalizedExpected || normalizedAliases.Contains(normalizedCurrent);
-            });
+            }).ToList();
 
-            if (matchedPlan != null)
+            if (matchingPlans.Count > 0)
             {
-                matchedPlan.Nome = expected.Nome;
-                matchedPlan.Descricao = expected.Descricao;
-                matchedPlan.DuracaoMinutos = expected.DuracaoMinutos;
-                matchedPlan.PrecoHatch = expected.PrecoHatch;
-                matchedPlan.PrecoSedan = expected.PrecoSedan;
-                matchedPlan.PrecoSuv = expected.PrecoSuv;
-                matchedPlan.PrecoCamionete = expected.PrecoCamionete;
-                matchedPlan.PrecoWagon = expected.PrecoWagon;
-                matchedPlan.EhAdicional = expected.EhAdicional;
-                matchedPlan.Ativo = true;
-                matchedPlan.AtualizadoEm = DateTime.UtcNow;
+                var primary = matchingPlans.FirstOrDefault(p => StringNormalizer.NormalizeText(p.Nome) == normalizedExpected)
+                              ?? matchingPlans.First();
+
+                primary.Nome = expected.Nome;
+                primary.Descricao = expected.Descricao;
+                primary.DuracaoMinutos = expected.DuracaoMinutos;
+                primary.PrecoHatch = expected.PrecoHatch;
+                primary.PrecoSedan = expected.PrecoSedan;
+                primary.PrecoSuv = expected.PrecoSuv;
+                primary.PrecoCamionete = expected.PrecoCamionete;
+                primary.PrecoWagon = expected.PrecoWagon;
+                primary.EhAdicional = expected.EhAdicional;
+                primary.Ativo = true;
+                primary.AtualizadoEm = DateTime.UtcNow;
+
+                // Tratar duplicados: desativa ou remove para não poluir a listagem
+                var duplicates = matchingPlans.Where(p => p.Id != primary.Id).ToList();
+                foreach (var dup in duplicates)
+                {
+                    var hasAppointments = await context.Agendamentos.AnyAsync(a => a.PlanoId == dup.Id, cancellationToken);
+                    if (hasAppointments)
+                    {
+                        dup.Ativo = false;
+                        dup.AtualizadoEm = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        context.Planos.Remove(dup);
+                        existingPlans.Remove(dup);
+                    }
+                }
             }
             else
             {
@@ -131,7 +151,7 @@ public static class DbInitializer
             }
         }
 
-        logger.LogInformation("Planos de serviço sincronizados com os valores e tempos da Landing Page.");
+        logger.LogInformation("Planos de serviço sincronizados e duplicidades saneadas com sucesso.");
     }
 
     private static async Task EnsureCuritibaCoverageAsync(
@@ -189,42 +209,64 @@ public static class DbInitializer
     [
         new(
             "Somente Limpeza Externa",
-            ["somente lavagem externa", "somente limpeza externa", "limpeza externa", "lavagem externa"],
+            ["somente lavagem externa", "somente limpeza externa", "limpeza externa", "lavagem externa", "externa"],
             "Pré-lavagem técnica, lavagem da carroceria com shampoo de pH neutro e luvas de microfibra, limpeza superficial de rodas e acabamento nos pneus. Tempo estimado: \"1h\".",
             60,
             45m, 55m, 65m, 80m, 55m
         ),
         new(
             "Somente Limpeza Interna",
-            ["somente limpeza interna", "limpeza interna"],
+            ["somente limpeza interna", "limpeza interna", "somente lavagem interna", "lavagem interna", "interna"],
             "Aspiração completa de carpetes, tapetes, bancos e porta-malas, higienização de painel, volante, console central e portas, e limpeza dos vidros internos. Tempo estimado: \"1h\".",
             60,
             45m, 55m, 65m, 80m, 55m
         ),
         new(
             "Lavagem Completa (Sem Cera)",
-            ["lavagem completa (sem cera)", "lavagem completa — sem cera", "lavagem completa sem cera", "completa sem cera"],
+            ["lavagem completa (sem cera)", "lavagem completa — sem cera", "lavagem completa sem cera", "completa sem cera", "lavagem sem cera", "sem cera"],
             "União de cuidado interno e externo: pré-lavagem, lavagem técnica, rodas e pneus, secagem, aspiração interna, higienização de superfícies e vidros internos/externos. Tempo estimado: \"1h30\".",
             90,
             60m, 80m, 90m, 120m, 80m
         ),
         new(
             "Lavagem Completa (Com Cera)",
-            ["lavagem completa (com cera)", "lavagem completa — com cera", "lavagem completa com cera", "completa com cera"],
+            ["lavagem completa (com cera)", "lavagem completa — com cera", "lavagem completa com cera", "completa com cera", "lavagem com cera", "com cera"],
             "Todo o cuidado da Lavagem Completa Sem Cera com aplicação manual de cera automotiva para brilho profundo, toque suave e proteção UV. Tempo estimado: \"2h\".",
             120,
             80m, 100m, 120m, 150m, 100m
         ),
         new(
             "Lavagem Detalhada (Técnica)",
-            ["lavagem detalhada (tecnica)", "lavagem detalhada — lavagem tecnica de alto padrao", "lavagem detalhada tecnica", "lavagem detalhada"],
+            [
+                "lavagem detalhada (tecnica)",
+                "lavagem detalhada — lavagem tecnica de alto padrao",
+                "lavagem detalhada tecnica",
+                "lavagem detalhada",
+                "lavagem tecnica",
+                "lavagem técnica",
+                "limpeza tecnica",
+                "limpeza técnica",
+                "lavagem tecnica de alto padrao",
+                "lavagem técnica de alto padrão",
+                "detalhada",
+                "tecnica",
+                "técnica"
+            ],
             "Detalhamento técnico de alto padrão: limpeza profunda de rodas e caixas de roda com pincéis, detalhamento externo de frestas e emblemas, renovação de plásticos, detalhamento minucioso da cabine e acabamento premium. Tempo estimado: \"3h\".",
             180,
             160m, 190m, 230m, 280m, 190m
         ),
         new(
             "Lavagem de Motor (Adicional)",
-            ["lavagem de motor (adicional)", "lavagem de motor adicional", "lavagem de motor"],
+            [
+                "lavagem de motor (adicional)",
+                "lavagem de motor adicional",
+                "lavagem de motor",
+                "limpeza de motor",
+                "limpeza de motor (adicional)",
+                "lavagem motor",
+                "motor"
+            ],
             "Limpeza técnica de motor 100% a seco utilizando produtos profissionais da linha Vonixx. Não jogamos água no cofre do motor, garantindo segurança total para os componentes elétricos e eletrônicos. Tempo estimado: \"1h\".",
             60,
             50m, 50m, 65m, 80m, 50m,

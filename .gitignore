@@ -27,3 +27,7 @@ yarn-error.log*
 *.log
 Thumbs.db
 .DS_Store
+
+## Scripts de Banco de Dados
+*.sql
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { planService } from '../../services/appServices';
 import { Link } from 'react-router-dom';
@@ -13,6 +13,29 @@ export const ServicesCatalogPage: React.FC = () => {
     queryKey: ['active-services'],
     queryFn: () => planService.getActiveServices(),
   });
+
+  const displayServices = useMemo(() => {
+    const seen = new Set<string>();
+    return services.filter((s) => {
+      const norm = s.nome.toLowerCase();
+      const key = norm.includes('motor')
+        ? 'motor'
+        : norm.includes('tecnica') || norm.includes('detalhada')
+        ? 'detalhada_tecnica'
+        : norm.includes('com cera')
+        ? 'com_cera'
+        : norm.includes('sem cera')
+        ? 'sem_cera'
+        : norm.includes('externa')
+        ? 'externa'
+        : norm.includes('interna')
+        ? 'interna'
+        : norm;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [services]);
 
   const categories: Array<{ key: VehicleCategory; label: string }> = [
     { key: 'Hatch', label: 'Hatch' },
@@ -73,7 +96,7 @@ export const ServicesCatalogPage: React.FC = () => {
         <div className="py-12 text-center text-slate-500 text-sm">Carregando catálogo de serviços...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {services.map((s) => {
+          {displayServices.map((s) => {
             const price = getPriceForCategory(s, selectedCategory);
             const isAddon = s.ehAdicional || s.nome.toLowerCase().includes('motor');
             return (

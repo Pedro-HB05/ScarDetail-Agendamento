@@ -74,14 +74,38 @@ export const BookingWizardPage: React.FC = () => {
     queryKey: ['my-addresses'], queryFn: () => addressService.getMyAddresses(),
   });
 
-  const mainServices = useMemo(() =>
-    services.filter((s) => !s.ehAdicional && !s.nome.toLowerCase().includes('motor')),
-    [services]
-  );
-  const addonServices = useMemo(() =>
-    services.filter((s) => s.ehAdicional || s.nome.toLowerCase().includes('motor')),
-    [services]
-  );
+  const getServiceCanonicalKey = (name: string) => {
+    const norm = normalize(name);
+    if (norm.includes('motor')) return 'motor';
+    if (norm.includes('tecnica') || norm.includes('detalhada')) return 'detalhada_tecnica';
+    if (norm.includes('com cera')) return 'com_cera';
+    if (norm.includes('sem cera')) return 'sem_cera';
+    if (norm.includes('externa')) return 'externa';
+    if (norm.includes('interna')) return 'interna';
+    return norm;
+  };
+
+  const mainServices = useMemo(() => {
+    const list = services.filter((s) => !s.ehAdicional && !s.nome.toLowerCase().includes('motor'));
+    const seen = new Set<string>();
+    return list.filter((s) => {
+      const key = getServiceCanonicalKey(s.nome);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [services]);
+
+  const addonServices = useMemo(() => {
+    const list = services.filter((s) => s.ehAdicional || s.nome.toLowerCase().includes('motor'));
+    const seen = new Set<string>();
+    return list.filter((s) => {
+      const key = getServiceCanonicalKey(s.nome);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [services]);
 
   const { data: slotsData, isLoading: loadingSlots } = useQuery({
     queryKey: ['available-slots', selectedPlan?.id, selectedDate, selectedAddon?.id],
