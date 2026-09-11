@@ -4,6 +4,7 @@ import { planService } from '../../services/appServices';
 import { Link } from 'react-router-dom';
 import { Sparkles, Clock, ArrowRight } from 'lucide-react';
 import type { VehicleCategory } from '../../types';
+import { formatDuration } from '../../utils/format';
 
 export const ServicesCatalogPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<VehicleCategory>('Sedan');
@@ -86,7 +87,7 @@ export const ServicesCatalogPage: React.FC = () => {
                     </h3>
                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300">
                       <Clock className="w-3.5 h-3.5 text-brand-400" />
-                      <span>{s.duracaoMinutos} min</span>
+                      <span>{formatDuration(s.duracaoMinutos)}</span>
                     </span>
                   </div>
 

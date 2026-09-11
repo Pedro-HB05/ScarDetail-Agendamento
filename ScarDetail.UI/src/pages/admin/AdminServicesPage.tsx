@@ -10,6 +10,7 @@ import { formatApiError } from '../../services/api';
 import { Plus, Edit2, Clock, History, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDuration } from '../../utils/format';
 
 const serviceSchema = z.object({
   nome: z.string().min(1, 'O nome do serviço é obrigatório'),
@@ -52,12 +53,12 @@ export const AdminServicesPage: React.FC = () => {
   } = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
-      duracaoMinutos: 90,
-      precoHatch: 55,
-      precoSedan: 70,
-      precoSuv: 80,
-      precoCamionete: 90,
-      precoWagon: 70,
+      duracaoMinutos: 60,
+      precoHatch: 45,
+      precoSedan: 55,
+      precoSuv: 65,
+      precoCamionete: 80,
+      precoWagon: 55,
     },
   });
 
@@ -66,12 +67,12 @@ export const AdminServicesPage: React.FC = () => {
     reset({
       nome: '',
       descricao: '',
-      duracaoMinutos: 90,
-      precoHatch: 55,
-      precoSedan: 70,
-      precoSuv: 80,
-      precoCamionete: 90,
-      precoWagon: 70,
+      duracaoMinutos: 60,
+      precoHatch: 45,
+      precoSedan: 55,
+      precoSuv: 65,
+      precoCamionete: 80,
+      precoWagon: 55,
     });
     setErrorMessage(null);
     setIsModalOpen(true);
@@ -174,7 +175,7 @@ export const AdminServicesPage: React.FC = () => {
 
                   <span className="flex items-center gap-1 text-xs font-semibold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-full flex-shrink-0">
                     <Clock className="w-3.5 h-3.5 text-brand-400" />
-                    <span>{plan.duracaoMinutos} min</span>
+                    <span>{formatDuration(plan.duracaoMinutos)}</span>
                   </span>
                 </div>
 
@@ -265,7 +266,7 @@ export const AdminServicesPage: React.FC = () => {
               </label>
               <input
                 type="text"
-                placeholder="Ex: Completa com Cera, Higienização Interna"
+                placeholder="Ex: Lavagem Detalhada (Técnica), Lavagem Completa (Com Cera)"
                 {...register('nome')}
                 className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500"
               />

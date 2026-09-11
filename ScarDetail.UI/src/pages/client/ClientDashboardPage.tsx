@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDuration } from '../../utils/format';
 
 export const ClientDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -143,7 +144,7 @@ export const ClientDashboardPage: React.FC = () => {
                 <p className="text-sm font-semibold text-white mt-0.5">
                   {format(parseISO(nextAppointment.dataHoraInicio), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                 </p>
-                <p className="text-xs text-slate-500">Duração estimada: {nextAppointment.duracaoMinutos} min</p>
+                <p className="text-xs text-slate-500">Duração estimada: {formatDuration(nextAppointment.duracaoMinutos)}</p>
               </div>
             </div>
 
