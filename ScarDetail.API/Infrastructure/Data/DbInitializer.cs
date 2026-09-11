@@ -112,21 +112,12 @@ public static class DbInitializer
                 primary.Ativo = true;
                 primary.AtualizadoEm = DateTime.UtcNow;
 
-                // Tratar duplicados: desativa ou remove para não poluir a listagem
+                // Tratar duplicados: desativa (soft-delete) para não violar triggers de auditoria (auditoria_planos)
                 var duplicates = matchingPlans.Where(p => p.Id != primary.Id).ToList();
                 foreach (var dup in duplicates)
                 {
-                    var hasAppointments = await context.Agendamentos.AnyAsync(a => a.PlanoId == dup.Id, cancellationToken);
-                    if (hasAppointments)
-                    {
-                        dup.Ativo = false;
-                        dup.AtualizadoEm = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        context.Planos.Remove(dup);
-                        existingPlans.Remove(dup);
-                    }
+                    dup.Ativo = false;
+                    dup.AtualizadoEm = DateTime.UtcNow;
                 }
             }
             else
