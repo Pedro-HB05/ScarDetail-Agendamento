@@ -67,6 +67,7 @@ public class ServicePlanService : IServicePlanService
             PrecoSuv = dto.PrecoSuv,
             PrecoCamionete = dto.PrecoCamionete,
             PrecoWagon = dto.PrecoWagon,
+            EhAdicional = dto.EhAdicional,
             Ativo = true
         };
 
@@ -99,6 +100,7 @@ public class ServicePlanService : IServicePlanService
         plan.PrecoSuv = dto.PrecoSuv;
         plan.PrecoCamionete = dto.PrecoCamionete;
         plan.PrecoWagon = dto.PrecoWagon;
+        plan.EhAdicional = dto.EhAdicional;
         plan.Ativo = dto.Ativo;
 
         _context.AuditoriaPlanos.Add(new PlanAudit
@@ -172,5 +174,5 @@ public class ServicePlanService : IServicePlanService
     }
 
     private static ServicePlanDto MapToDto(ServicePlan p) =>
-        new(p.Id, p.Nome, p.Descricao, p.DuracaoMinutos, p.PrecoHatch, p.PrecoSedan, p.PrecoSuv, p.PrecoCamionete, p.PrecoWagon, p.Ativo, p.CriadoEm, p.AtualizadoEm);
+        new(p.Id, p.Nome, p.Descricao, p.DuracaoMinutos, p.PrecoHatch, p.PrecoSedan, p.PrecoSuv, p.PrecoCamionete, p.PrecoWagon, p.Ativo, p.EhAdicional, p.CriadoEm, p.AtualizadoEm);
 }

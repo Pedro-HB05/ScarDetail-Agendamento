@@ -12,6 +12,7 @@ public interface ISchedulingEngine
     Task<AvailableSlotsResponseDto> ObterHorariosDisponiveisAsync(
         Guid planoId,
         DateOnly data,
+        Guid? adicionalId = null,
         CancellationToken cancellationToken = default);
 
     Task ValidarDisponibilidadeHorarioAsync(
@@ -36,6 +37,7 @@ public class SchedulingEngine : ISchedulingEngine
     public async Task<AvailableSlotsResponseDto> ObterHorariosDisponiveisAsync(
         Guid planoId,
         DateOnly data,
+        Guid? adicionalId = null,
         CancellationToken cancellationToken = default)
     {
         var plano = await _context.Planos.AsNoTracking()
@@ -47,6 +49,18 @@ public class SchedulingEngine : ISchedulingEngine
         if (!plano.Ativo)
             throw new ValidationAppException("Não é possível consultar horários para um serviço inativo.");
 
+        var duracaoTotalMinutos = plano.DuracaoMinutos;
+        if (adicionalId.HasValue)
+        {
+            var adicional = await _context.Planos.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == adicionalId.Value, cancellationToken);
+
+            if (adicional != null && adicional.Ativo)
+            {
+                duracaoTotalMinutos += adicional.DuracaoMinutos;
+            }
+        }
+
         // 1. Obter dia da semana (0 = Domingo .. 6 = Sábado)
         var diaSemanaInt = (int)data.DayOfWeek;
         var horarioFuncionamento = await _context.HorariosFuncionamento.AsNoTracking()
@@ -57,7 +71,7 @@ public class SchedulingEngine : ISchedulingEngine
             return new AvailableSlotsResponseDto(
                 data,
                 horarioFuncionamento?.NomeDia ?? data.DayOfWeek.ToString(),
-                plano.DuracaoMinutos,
+                duracaoTotalMinutos,
                 BufferDeslocamentoMinutosPadrao,
                 new List<TimeSlotDto>()
             );
@@ -86,8 +100,8 @@ public class SchedulingEngine : ISchedulingEngine
 
         // 5. Gerar slots de 15 em 15 minutos
         var slots = new List<TimeSlotDto>();
-        var tempoOcupacaoTotal = TimeSpan.FromMinutes(plano.DuracaoMinutos + BufferDeslocamentoMinutosPadrao);
-        var tempoServico = TimeSpan.FromMinutes(plano.DuracaoMinutos);
+        var tempoOcupacaoTotal = TimeSpan.FromMinutes(duracaoTotalMinutos + BufferDeslocamentoMinutosPadrao);
+        var tempoServico = TimeSpan.FromMinutes(duracaoTotalMinutos);
 
         var slotAtualLocal = dataHoraAberturaLocal;
         var agoraUtc = DateTime.UtcNow;
@@ -146,7 +160,7 @@ public class SchedulingEngine : ISchedulingEngine
         return new AvailableSlotsResponseDto(
             data,
             horarioFuncionamento.NomeDia,
-            plano.DuracaoMinutos,
+            duracaoTotalMinutos,
             BufferDeslocamentoMinutosPadrao,
             slots
         );

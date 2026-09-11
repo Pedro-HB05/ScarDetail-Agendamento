@@ -45,12 +45,35 @@ public static class DbInitializer
                 }));
         }
 
+        await EnsureSchemaCompatibilityAsync(context, logger, cancellationToken);
+
         await EnsurePlansCoverageAsync(context, logger, cancellationToken);
 
         await EnsureCuritibaCoverageAsync(context, logger, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Dados de referência aplicados com sucesso");
+    }
+
+    private static async Task EnsureSchemaCompatibilityAsync(
+        AppDbContext context,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(@"
+                ALTER TABLE planos ADD COLUMN IF NOT EXISTS eh_adicional boolean NOT NULL DEFAULT FALSE;
+                ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS adicional_id uuid NULL;
+                ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS adicional_nome character varying(100) NULL;
+                ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS valor_adicional numeric(10,2) NOT NULL DEFAULT 0;
+            ", cancellationToken);
+            logger.LogInformation("Compatibilidade de schema verificada (colunas de adicionais garantidas).");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Aviso ao verificar compatibilidade de colunas no banco de dados.");
+        }
     }
 
     private static async Task EnsurePlansCoverageAsync(
@@ -82,6 +105,7 @@ public static class DbInitializer
                 matchedPlan.PrecoSuv = expected.PrecoSuv;
                 matchedPlan.PrecoCamionete = expected.PrecoCamionete;
                 matchedPlan.PrecoWagon = expected.PrecoWagon;
+                matchedPlan.EhAdicional = expected.EhAdicional;
                 matchedPlan.Ativo = true;
                 matchedPlan.AtualizadoEm = DateTime.UtcNow;
             }
@@ -97,6 +121,7 @@ public static class DbInitializer
                     PrecoSuv = expected.PrecoSuv,
                     PrecoCamionete = expected.PrecoCamionete,
                     PrecoWagon = expected.PrecoWagon,
+                    EhAdicional = expected.EhAdicional,
                     Ativo = true,
                     CriadoEm = DateTime.UtcNow,
                     AtualizadoEm = DateTime.UtcNow
@@ -156,7 +181,8 @@ public static class DbInitializer
         decimal PrecoSedan,
         decimal PrecoSuv,
         decimal PrecoCamionete,
-        decimal PrecoWagon
+        decimal PrecoWagon,
+        bool EhAdicional = false
     );
 
     private static PlanSeed[] ExpectedSeedPlans() =>
@@ -199,9 +225,10 @@ public static class DbInitializer
         new(
             "Lavagem de Motor (Adicional)",
             ["lavagem de motor (adicional)", "lavagem de motor adicional", "lavagem de motor"],
-            "Limpeza técnica e minuciosa do cofre do motor com produtos específicos, remoção segura de resíduos e condicionamento com proteção térmica dos componentes plásticos e borrachas. Tempo estimado: \"1h\".",
+            "Limpeza técnica de motor 100% a seco utilizando produtos profissionais da linha Vonixx. Não jogamos água no cofre do motor, garantindo segurança total para os componentes elétricos e eletrônicos. Tempo estimado: \"1h\".",
             60,
-            50m, 50m, 65m, 80m, 50m
+            50m, 50m, 65m, 80m, 50m,
+            true
         )
     ];
 
@@ -216,6 +243,7 @@ public static class DbInitializer
             PrecoSuv = s.PrecoSuv,
             PrecoCamionete = s.PrecoCamionete,
             PrecoWagon = s.PrecoWagon,
+            EhAdicional = s.EhAdicional,
             Ativo = true
         }).ToArray();
 }

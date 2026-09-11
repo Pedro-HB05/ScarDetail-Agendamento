@@ -26,9 +26,10 @@ public class AppointmentsController : BaseApiController
     public async Task<ActionResult<AvailableSlotsResponseDto>> GetAvailableSlots(
         [FromQuery] Guid planoId,
         [FromQuery] DateOnly data,
+        [FromQuery] Guid? adicionalId,
         CancellationToken cancellationToken)
     {
-        var slots = await _schedulingEngine.ObterHorariosDisponiveisAsync(planoId, data, cancellationToken);
+        var slots = await _schedulingEngine.ObterHorariosDisponiveisAsync(planoId, data, adicionalId, cancellationToken);
         return Ok(slots);
     }
 

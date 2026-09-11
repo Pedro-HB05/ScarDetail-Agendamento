@@ -13,6 +13,7 @@ public record ServicePlanDto(
     decimal PrecoCamionete,
     decimal PrecoWagon,
     bool Ativo,
+    bool EhAdicional,
     DateTime CriadoEm,
     DateTime AtualizadoEm
 );
@@ -25,7 +26,8 @@ public record CreateServicePlanDto(
     decimal PrecoSedan,
     decimal PrecoSuv,
     decimal PrecoCamionete,
-    decimal PrecoWagon
+    decimal PrecoWagon,
+    bool EhAdicional = false
 );
 
 public record UpdateServicePlanDto(
@@ -37,7 +39,8 @@ public record UpdateServicePlanDto(
     decimal PrecoSuv,
     decimal PrecoCamionete,
     decimal PrecoWagon,
-    bool Ativo
+    bool Ativo,
+    bool EhAdicional = false
 );
 
 public record PlanAuditDto(

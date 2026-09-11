@@ -169,6 +169,11 @@ export const AdminServicesPage: React.FC = () => {
                       >
                         {plan.ativo ? 'Ativo' : 'Inativo'}
                       </span>
+                      {plan.ehAdicional && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/30">
+                          Adicional
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400 mt-1 line-clamp-2">{plan.descricao}</p>
                   </div>

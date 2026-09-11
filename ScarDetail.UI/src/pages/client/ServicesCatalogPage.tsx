@@ -75,23 +75,43 @@ export const ServicesCatalogPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {services.map((s) => {
             const price = getPriceForCategory(s, selectedCategory);
+            const isAddon = s.ehAdicional || s.nome.toLowerCase().includes('motor');
             return (
               <div
                 key={s.id}
-                className="bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between shadow-xl hover:border-brand-500/40 transition-all group"
+                className={`bg-slate-900 border rounded-3xl p-8 flex flex-col justify-between shadow-xl transition-all group ${
+                  isAddon ? 'border-amber-500/40 hover:border-amber-500/70' : 'border-slate-800 hover:border-brand-500/40'
+                }`}
               >
                 <div>
+                  {isAddon && (
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider">
+                        Serviço Adicional / Extra
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold">
+                        100% a Seco (Linha Vonixx)
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-start justify-between gap-4">
                     <h3 className="text-xl font-bold text-white group-hover:text-brand-400 transition-colors">
                       {s.nome}
                     </h3>
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 shrink-0">
                       <Clock className="w-3.5 h-3.5 text-brand-400" />
                       <span>{formatDuration(s.duracaoMinutos)}</span>
                     </span>
                   </div>
 
                   <p className="text-sm text-slate-400 mt-3 leading-relaxed">{s.descricao}</p>
+
+                  {isAddon && (
+                    <div className="mt-3.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed">
+                      <strong className="text-amber-300 font-bold block mb-1">🛡️ Limpeza de Motor 100% a Seco com Vonixx</strong>
+                      Limpeza técnica feita exclusivamente a seco com produtos específicos da Vonixx. <strong>Não é jogado água</strong> no cofre do motor, protegendo módulo ECU, sensores e componentes elétricos. Pode ser adicionado a qualquer lavagem.
+                    </div>
+                  )}
 
                   {/* Tabela de Preços por Categoria */}
                   <div className="mt-6 pt-6 border-t border-slate-800/80">
@@ -132,9 +152,13 @@ export const ServicesCatalogPage: React.FC = () => {
                   </div>
                   <Link
                     to={`/book?serviceId=${s.id}`}
-                    className="inline-flex items-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-2xl shadow-lg shadow-brand-600/20 transition-all"
+                    className={`inline-flex items-center gap-2 px-5 py-3 text-white font-semibold text-sm rounded-2xl shadow-lg transition-all ${
+                      isAddon
+                        ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/20'
+                        : 'bg-brand-600 hover:bg-brand-500 shadow-brand-600/20'
+                    }`}
                   >
-                    <span>Agendar Este</span>
+                    <span>{isAddon ? 'Adicionar ao Agendamento' : 'Agendar Este'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>

@@ -98,6 +98,7 @@ public class ServicePlan
     public decimal PrecoCamionete { get; set; }
     public decimal PrecoWagon { get; set; }
     public bool Ativo { get; set; } = true;
+    public bool EhAdicional { get; set; } = false;
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
     public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
 
@@ -164,9 +165,13 @@ public class Appointment
     public Address Endereco { get; set; } = null!;
     public Guid PlanoId { get; set; }
     public ServicePlan Plano { get; set; } = null!;
+    public Guid? AdicionalId { get; set; }
+    public ServicePlan? Adicional { get; set; }
 
     // Snapshots imutáveis
     public string ServicoNome { get; set; } = string.Empty;
+    public string? AdicionalNome { get; set; }
+    public decimal ValorAdicional { get; set; }
     public VehicleCategory VeiculoCategoria { get; set; }
     public string VeiculoMarca { get; set; } = string.Empty;
     public string VeiculoModelo { get; set; } = string.Empty;

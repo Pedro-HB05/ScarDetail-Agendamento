@@ -73,9 +73,30 @@ public class AppointmentService : IAppointmentService
         if (!plano.Ativo)
             throw new ValidationAppException("Este serviço está desativado no momento e não aceita novos agendamentos.");
 
-        // 5. Calcular preço e tempos (com suporte integral à Wagon)
+        ServicePlan? adicional = null;
+        if (dto.AdicionalId.HasValue)
+        {
+            adicional = await _context.Planos.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == dto.AdicionalId.Value, cancellationToken);
+
+            if (adicional == null || !adicional.Ativo)
+                throw new ValidationAppException("O serviço adicional selecionado não foi encontrado ou está desativado.");
+        }
+
+        // 5. Calcular preço e tempos (com suporte integral à Wagon e Adicional)
         var valorCobrado = plano.ObterPrecoPorCategoria(veiculo.Categoria);
         var duracaoMinutos = plano.DuracaoMinutos;
+        var servicoNome = plano.Nome;
+        decimal valorAdicional = 0;
+
+        if (adicional != null)
+        {
+            valorAdicional = adicional.ObterPrecoPorCategoria(veiculo.Categoria);
+            valorCobrado += valorAdicional;
+            duracaoMinutos += adicional.DuracaoMinutos;
+            servicoNome = $"{plano.Nome} + {adicional.Nome}";
+        }
+
         var dataHoraInicioUtc = TimeZoneHelper.NormalizeToUtc(dto.DataHoraInicio);
         var dataHoraFimServicoUtc = dataHoraInicioUtc.AddMinutes(duracaoMinutos);
         var dataHoraFimOcupacaoUtc = dataHoraInicioUtc.AddMinutes(duracaoMinutos + BufferDeslocamentoMinutosPadrao);
@@ -106,9 +127,12 @@ public class AppointmentService : IAppointmentService
                     VeiculoId = veiculo.Id,
                     EnderecoId = endereco.Id,
                     PlanoId = plano.Id,
+                    AdicionalId = adicional?.Id,
 
                     // Snapshots imutáveis
-                    ServicoNome = plano.Nome,
+                    ServicoNome = servicoNome,
+                    AdicionalNome = adicional?.Nome,
+                    ValorAdicional = valorAdicional,
                     VeiculoCategoria = veiculo.Categoria,
                     VeiculoMarca = veiculo.Marca,
                     VeiculoModelo = veiculo.Modelo,
@@ -396,6 +420,9 @@ public class AppointmentService : IAppointmentService
             a.EnderecoCompleto,
             a.PlanoId,
             a.ServicoNome,
+            a.AdicionalId,
+            a.AdicionalNome,
+            a.ValorAdicional,
             a.ValorCobrado,
             a.DuracaoMinutos,
             a.BufferDeslocamentoMinutos,

@@ -18,6 +18,9 @@ public record AppointmentDto(
     string EnderecoCompleto,
     Guid PlanoId,
     string ServicoNome,
+    Guid? AdicionalId,
+    string? AdicionalNome,
+    decimal? ValorAdicional,
     decimal ValorCobrado,
     int DuracaoMinutos,
     int BufferDeslocamentoMinutos,
@@ -49,7 +52,8 @@ public record CreateAppointmentDto(
     Guid EnderecoId,
     Guid PlanoId,
     DateTime DataHoraInicio,
-    string? Observacoes
+    string? Observacoes,
+    Guid? AdicionalId = null
 );
 
 public record RescheduleAppointmentDto(

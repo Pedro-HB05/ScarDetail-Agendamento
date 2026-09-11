@@ -107,6 +107,7 @@ export interface ServicePlan {
   precoCamionete: number;
   precoWagon: number;
   ativo: boolean;
+  ehAdicional?: boolean;
   criadoEm: string;
   atualizadoEm: string;
 }
@@ -264,6 +265,9 @@ export interface Appointment {
   enderecoCompleto: string;
   planoId: string;
   servicoNome: string;
+  adicionalId?: string;
+  adicionalNome?: string;
+  valorAdicional?: number;
   valorCobrado: number;
   duracaoMinutos: number;
   bufferDeslocamentoMinutos: number;
@@ -286,6 +290,7 @@ export interface CreateAppointmentInput {
   planoId: string;
   dataHoraInicio: string;
   observacoes?: string;
+  adicionalId?: string;
 }
 
 export interface CreatePaymentInput {

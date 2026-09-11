@@ -151,6 +151,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.PrecoCamionete).HasColumnName("preco_camionete").HasColumnType("numeric(10,2)").IsRequired();
             entity.Property(e => e.PrecoWagon).HasColumnName("preco_wagon").HasColumnType("numeric(10,2)").IsRequired();
             entity.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true).IsRequired();
+            entity.Property(e => e.EhAdicional).HasColumnName("eh_adicional").HasDefaultValue(false).IsRequired();
             entity.Property(e => e.CriadoEm).HasColumnName("criado_em").HasColumnType("timestamptz").IsRequired();
             entity.Property(e => e.AtualizadoEm).HasColumnName("atualizado_em").HasColumnType("timestamptz").IsRequired();
         });
@@ -226,9 +227,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.VeiculoId).HasColumnName("veiculo_id").IsRequired();
             entity.Property(e => e.EnderecoId).HasColumnName("endereco_id").IsRequired();
             entity.Property(e => e.PlanoId).HasColumnName("plano_id").IsRequired();
+            entity.Property(e => e.AdicionalId).HasColumnName("adicional_id");
 
             // Snapshots
             entity.Property(e => e.ServicoNome).HasColumnName("servico_nome").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.AdicionalNome).HasColumnName("adicional_nome").HasMaxLength(100);
+            entity.Property(e => e.ValorAdicional).HasColumnName("valor_adicional").HasColumnType("numeric(10,2)").HasDefaultValue(0).IsRequired();
             entity.Property(e => e.VeiculoCategoria).HasColumnName("veiculo_categoria").HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(e => e.VeiculoMarca).HasColumnName("veiculo_marca").HasMaxLength(50).IsRequired();
             entity.Property(e => e.VeiculoModelo).HasColumnName("veiculo_modelo").HasMaxLength(50).IsRequired();
@@ -271,6 +275,11 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Plano)
                   .WithMany(p => p.Agendamentos)
                   .HasForeignKey(e => e.PlanoId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Adicional)
+                  .WithMany()
+                  .HasForeignKey(e => e.AdicionalId)
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.CanceladoPorUsuario)

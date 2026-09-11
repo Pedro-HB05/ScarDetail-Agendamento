@@ -188,9 +188,9 @@ export const agendaBlockService = {
 };
 
 export const appointmentService = {
-  async getAvailableSlots(planoId: string, data: string): Promise<AvailableSlotsResponse> {
+  async getAvailableSlots(planoId: string, data: string, adicionalId?: string): Promise<AvailableSlotsResponse> {
     const res = await api.get<AvailableSlotsResponse>('/appointments/available-slots', {
-      params: { planoId, data },
+      params: { planoId, data, adicionalId: adicionalId || undefined },
     });
     return res.data;
   },
