@@ -21,6 +21,7 @@ const serviceSchema = z.object({
   precoSuv: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoCamionete: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoWagon: z.coerce.number().min(0, 'O valor não pode ser negativo'),
+  ativo: z.boolean(),
 });
 
 type ServiceFormData = z.infer<typeof serviceSchema>;
@@ -49,6 +50,7 @@ export const AdminServicesPage: React.FC = () => {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
@@ -59,8 +61,11 @@ export const AdminServicesPage: React.FC = () => {
       precoSuv: 65,
       precoCamionete: 80,
       precoWagon: 55,
+      ativo: true,
     },
   });
+
+  const watchAtivo = watch('ativo');
 
   const openCreateModal = () => {
     setEditingPlan(null);
@@ -73,6 +78,7 @@ export const AdminServicesPage: React.FC = () => {
       precoSuv: 65,
       precoCamionete: 80,
       precoWagon: 55,
+      ativo: true,
     });
     setErrorMessage(null);
     setIsModalOpen(true);
@@ -88,6 +94,7 @@ export const AdminServicesPage: React.FC = () => {
     setValue('precoSuv', plan.precoSuv);
     setValue('precoCamionete', plan.precoCamionete);
     setValue('precoWagon', plan.precoWagon);
+    setValue('ativo', plan.ativo);
     setErrorMessage(null);
     setIsModalOpen(true);
   };
@@ -102,13 +109,14 @@ export const AdminServicesPage: React.FC = () => {
       if (editingPlan) {
         return planService.updateService(editingPlan.id, {
           ...data,
-          ativo: editingPlan.ativo,
+          ativo: data.ativo,
         });
       }
       return planService.createService(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-services'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services'] });
       setIsModalOpen(false);
     },
     onError: (err) => {
@@ -121,6 +129,10 @@ export const AdminServicesPage: React.FC = () => {
       planService.toggleServiceStatus(id, active),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-services'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services'] });
+    },
+    onError: (err) => {
+      setErrorMessage(formatApiError(err));
     },
   });
 
@@ -145,6 +157,22 @@ export const AdminServicesPage: React.FC = () => {
           <span>Novo Serviço</span>
         </button>
       </div>
+
+      {errorMessage && !isModalOpen && (
+        <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-xs font-semibold hover:text-white"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="py-12 text-center text-slate-500 text-sm">Carregando serviços...</div>
@@ -358,6 +386,27 @@ export const AdminServicesPage: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl">
+            <div>
+              <label className="text-xs font-bold text-white uppercase tracking-wider block">
+                Disponibilidade do Serviço
+              </label>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {watchAtivo
+                  ? 'Serviço ativo (visível para agendamento dos clientes)'
+                  : 'Serviço inativo (oculto para novos agendamentos)'}
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                {...register('ativo')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
           </div>
 
           <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">

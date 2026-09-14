@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ScarDetail.API.Application.Common.Exceptions;
 using ScarDetail.API.Application.DTOs;
 using ScarDetail.API.Application.Services;
 
@@ -59,8 +61,37 @@ public class ServicesController : BaseApiController
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("admin/{id:guid}/status")]
-    public async Task<IActionResult> ToggleServiceStatus(Guid id, [FromBody] bool active, CancellationToken cancellationToken)
+    public async Task<IActionResult> ToggleServiceStatus(Guid id, [FromBody] JsonElement body, CancellationToken cancellationToken)
     {
+        bool active;
+        if (body.ValueKind == JsonValueKind.True)
+        {
+            active = true;
+        }
+        else if (body.ValueKind == JsonValueKind.False)
+        {
+            active = false;
+        }
+        else if (body.ValueKind == JsonValueKind.Object)
+        {
+            if (body.TryGetProperty("ativo", out var ativoProp) && (ativoProp.ValueKind == JsonValueKind.True || ativoProp.ValueKind == JsonValueKind.False))
+            {
+                active = ativoProp.GetBoolean();
+            }
+            else if (body.TryGetProperty("active", out var activeProp) && (activeProp.ValueKind == JsonValueKind.True || activeProp.ValueKind == JsonValueKind.False))
+            {
+                active = activeProp.GetBoolean();
+            }
+            else
+            {
+                throw new ValidationAppException("O status ativo/inativo deve ser informado.");
+            }
+        }
+        else
+        {
+            throw new ValidationAppException("Formato de status inválido.");
+        }
+
         var adminId = GetCurrentUserId();
         await _planService.TogglePlanActiveStatusAsync(id, active, adminId, cancellationToken);
         return NoContent();

@@ -67,8 +67,10 @@ public static class DbInitializer
                 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS adicional_id uuid NULL;
                 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS adicional_nome character varying(100) NULL;
                 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS valor_adicional numeric(10,2) NOT NULL DEFAULT 0;
+                ALTER TABLE agendamentos ALTER COLUMN buffer_deslocamento_minutos SET DEFAULT 0;
+                UPDATE agendamentos SET buffer_deslocamento_minutos = 0, data_hora_fim_ocupacao = data_hora_fim_servico WHERE buffer_deslocamento_minutos > 0;
             ", cancellationToken);
-            logger.LogInformation("Compatibilidade de schema verificada (colunas de adicionais garantidas).");
+            logger.LogInformation("Compatibilidade de schema verificada (colunas de adicionais e buffer 0 garantidos).");
         }
         catch (Exception ex)
         {
@@ -109,7 +111,7 @@ public static class DbInitializer
                 primary.PrecoCamionete = expected.PrecoCamionete;
                 primary.PrecoWagon = expected.PrecoWagon;
                 primary.EhAdicional = expected.EhAdicional;
-                primary.Ativo = true;
+                // Preserva o status Ativo definido pelo administrador
                 primary.AtualizadoEm = DateTime.UtcNow;
 
                 // Tratar duplicados: desativa (soft-delete) para não violar triggers de auditoria (auditoria_planos)

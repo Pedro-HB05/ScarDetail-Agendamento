@@ -240,7 +240,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.EnderecoCompleto).HasColumnName("endereco_completo").IsRequired();
             entity.Property(e => e.ValorCobrado).HasColumnName("valor_cobrado").HasColumnType("numeric(10,2)").IsRequired();
             entity.Property(e => e.DuracaoMinutos).HasColumnName("duracao_minutos").IsRequired();
-            entity.Property(e => e.BufferDeslocamentoMinutos).HasColumnName("buffer_deslocamento_minutos").HasDefaultValue(30).IsRequired();
+            entity.Property(e => e.BufferDeslocamentoMinutos).HasColumnName("buffer_deslocamento_minutos").HasDefaultValue(0).IsRequired();
 
             // Datas/Horas
             entity.Property(e => e.DataHoraInicio).HasColumnName("data_hora_inicio").HasColumnType("timestamptz").IsRequired();

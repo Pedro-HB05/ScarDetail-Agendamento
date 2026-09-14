@@ -179,7 +179,7 @@ public class Appointment
     public string EnderecoCompleto { get; set; } = string.Empty;
     public decimal ValorCobrado { get; set; }
     public int DuracaoMinutos { get; set; }
-    public int BufferDeslocamentoMinutos { get; set; } = 30;
+    public int BufferDeslocamentoMinutos { get; set; } = 0;
 
     // Datas e Horários
     public DateTime DataHoraInicio { get; set; }

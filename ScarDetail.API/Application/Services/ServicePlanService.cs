@@ -68,16 +68,26 @@ public class ServicePlanService : IServicePlanService
             PrecoCamionete = dto.PrecoCamionete,
             PrecoWagon = dto.PrecoWagon,
             EhAdicional = dto.EhAdicional,
-            Ativo = true
+            Ativo = true,
+            CriadoEm = DateTime.UtcNow,
+            AtualizadoEm = DateTime.UtcNow
         };
 
         _context.Planos.Add(plan);
+
+        Guid? validAdminId = null;
+        if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
+        {
+            validAdminId = adminUserId.Value;
+        }
+
         _context.AuditoriaPlanos.Add(new PlanAudit
         {
             PlanoId = plan.Id,
-            UsuarioId = adminUserId,
+            UsuarioId = validAdminId,
             Acao = "INSERT",
-            DadosNovos = SerializePlanSnapshot(plan)
+            DadosNovos = SerializePlanSnapshot(plan),
+            CriadoEm = DateTime.UtcNow
         });
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -102,14 +112,22 @@ public class ServicePlanService : IServicePlanService
         plan.PrecoWagon = dto.PrecoWagon;
         plan.EhAdicional = dto.EhAdicional;
         plan.Ativo = dto.Ativo;
+        plan.AtualizadoEm = DateTime.UtcNow;
+
+        Guid? validAdminId = null;
+        if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
+        {
+            validAdminId = adminUserId.Value;
+        }
 
         _context.AuditoriaPlanos.Add(new PlanAudit
         {
             PlanoId = plan.Id,
-            UsuarioId = adminUserId,
+            UsuarioId = validAdminId,
             Acao = "UPDATE",
             DadosAnteriores = dadosAntigos,
-            DadosNovos = SerializePlanSnapshot(plan)
+            DadosNovos = SerializePlanSnapshot(plan),
+            CriadoEm = DateTime.UtcNow
         });
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -124,13 +142,22 @@ public class ServicePlanService : IServicePlanService
 
         var dadosAntigos = SerializePlanSnapshot(plan);
         plan.Ativo = active;
+        plan.AtualizadoEm = DateTime.UtcNow;
+
+        Guid? validAdminId = null;
+        if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
+        {
+            validAdminId = adminUserId.Value;
+        }
+
         _context.AuditoriaPlanos.Add(new PlanAudit
         {
             PlanoId = plan.Id,
-            UsuarioId = adminUserId,
+            UsuarioId = validAdminId,
             Acao = active ? "ACTIVATE" : "DEACTIVATE",
             DadosAnteriores = dadosAntigos,
-            DadosNovos = SerializePlanSnapshot(plan)
+            DadosNovos = SerializePlanSnapshot(plan),
+            CriadoEm = DateTime.UtcNow
         });
         await _context.SaveChangesAsync(cancellationToken);
     }

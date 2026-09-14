@@ -26,7 +26,7 @@ public class AppointmentService : IAppointmentService
     private readonly AppDbContext _context;
     private readonly ISchedulingEngine _schedulingEngine;
     private readonly IAddressService _addressService;
-    private const int BufferDeslocamentoMinutosPadrao = 30;
+    private const int BufferDeslocamentoMinutosPadrao = 0;
 
     public AppointmentService(
         AppDbContext context,

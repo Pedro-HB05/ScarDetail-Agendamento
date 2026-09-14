@@ -26,7 +26,7 @@ public interface ISchedulingEngine
 public class SchedulingEngine : ISchedulingEngine
 {
     private readonly AppDbContext _context;
-    private const int BufferDeslocamentoMinutosPadrao = 30;
+    private const int BufferDeslocamentoMinutosPadrao = 0;
     private const int IntervaloGradeMinutos = 15;
 
     public SchedulingEngine(AppDbContext context)
@@ -214,7 +214,7 @@ public class SchedulingEngine : ISchedulingEngine
         if (inicioLocal < aberturaLocal || fimOcupacaoLocal > fechamentoLocal)
         {
             throw new ValidationAppException(
-                $"O horário solicitado com duração e deslocamento ({inicioLocal:HH:mm} às {fimOcupacaoLocal:HH:mm}) ultrapassa o expediente ({aberturaLocal:HH:mm} às {fechamentoLocal:HH:mm}).");
+                $"O horário solicitado ({inicioLocal:HH:mm} às {fimOcupacaoLocal:HH:mm}) ultrapassa o expediente ({aberturaLocal:HH:mm} às {fechamentoLocal:HH:mm}).");
         }
 
         // Verificar Bloqueios

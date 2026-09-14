@@ -108,7 +108,7 @@ export const planService = {
   },
 
   async toggleServiceStatus(id: string, active: boolean): Promise<void> {
-    await api.patch(`/services/admin/${id}/status`, active);
+    await api.patch(`/services/admin/${id}/status`, { ativo: active, active });
   },
 
   async getPlanAudits(id: string): Promise<PlanAudit[]> {
@@ -134,7 +134,7 @@ export const neighborhoodService = {
   },
 
   async toggleStatus(id: string, active: boolean): Promise<void> {
-    await api.patch(`/admin/neighborhoods/${id}/status`, active);
+    await api.patch(`/admin/neighborhoods/${id}/status`, { ativo: active, active });
   },
 
   async delete(id: string): Promise<void> {
