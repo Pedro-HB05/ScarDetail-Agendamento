@@ -15,26 +15,7 @@ export const ServicesCatalogPage: React.FC = () => {
   });
 
   const displayServices = useMemo(() => {
-    const seen = new Set<string>();
-    return services.filter((s) => {
-      const norm = s.nome.toLowerCase();
-      const key = norm.includes('motor')
-        ? 'motor'
-        : norm.includes('tecnica') || norm.includes('detalhada')
-        ? 'detalhada_tecnica'
-        : norm.includes('com cera')
-        ? 'com_cera'
-        : norm.includes('sem cera')
-        ? 'sem_cera'
-        : norm.includes('externa')
-        ? 'externa'
-        : norm.includes('interna')
-        ? 'interna'
-        : norm;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    return services.filter((s) => s.ativo !== false);
   }, [services]);
 
   const categories: Array<{ key: VehicleCategory; label: string }> = [
