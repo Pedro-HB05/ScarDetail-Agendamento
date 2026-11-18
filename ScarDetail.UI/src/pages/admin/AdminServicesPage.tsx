@@ -18,11 +18,12 @@ const serviceSchema = z.object({
   duracaoMinutos: z.coerce.number().min(1, 'A duração deve ser de no mínimo 1 minuto'),
   precoHatch: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoSedan: z.coerce.number().min(0, 'O valor não pode ser negativo'),
+  precoWagon: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoSuv: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoCamionete: z.coerce.number().min(0, 'O valor não pode ser negativo'),
-  precoWagon: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   ehAdicional: z.boolean(),
   ativo: z.boolean(),
+  ordem: z.coerce.number().min(0).optional(),
 });
 
 type ServiceFormData = z.infer<typeof serviceSchema>;
@@ -65,11 +66,12 @@ export const AdminServicesPage: React.FC = () => {
       duracaoMinutos: 60,
       precoHatch: 45,
       precoSedan: 55,
+      precoWagon: 55,
       precoSuv: 65,
       precoCamionete: 80,
-      precoWagon: 55,
       ehAdicional: false,
       ativo: true,
+      ordem: 1,
     },
   });
 
@@ -84,11 +86,12 @@ export const AdminServicesPage: React.FC = () => {
       duracaoMinutos: 60,
       precoHatch: 45,
       precoSedan: 55,
+      precoWagon: 55,
       precoSuv: 65,
       precoCamionete: 80,
-      precoWagon: 55,
       ehAdicional: false,
       ativo: true,
+      ordem: services.length + 1,
     });
     setErrorMessage(null);
     setIsModalOpen(true);
@@ -101,11 +104,12 @@ export const AdminServicesPage: React.FC = () => {
     setValue('duracaoMinutos', plan.duracaoMinutos);
     setValue('precoHatch', plan.precoHatch);
     setValue('precoSedan', plan.precoSedan);
+    setValue('precoWagon', plan.precoWagon);
     setValue('precoSuv', plan.precoSuv);
     setValue('precoCamionete', plan.precoCamionete);
-    setValue('precoWagon', plan.precoWagon);
     setValue('ehAdicional', plan.ehAdicional ?? false);
     setValue('ativo', plan.ativo);
+    setValue('ordem', plan.ordem ?? 1);
     setErrorMessage(null);
     setIsModalOpen(true);
   };
@@ -224,10 +228,10 @@ export const AdminServicesPage: React.FC = () => {
           <button
             type="button"
             onClick={openReorderModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm rounded-2xl border border-slate-700 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 hover:text-brand-300 font-bold text-sm rounded-2xl border border-brand-500/30 transition-all shadow-sm"
             title="Reorganizar ordem dos serviços"
           >
-            <ArrowUpDown className="w-4 h-4 text-brand-400" />
+            <ArrowUpDown className="w-4 h-4" />
             <span>Organizar Ordem</span>
           </button>
           <button
@@ -384,8 +388,8 @@ export const AdminServicesPage: React.FC = () => {
                       }
                     }}
                     disabled={deleteMutation.isPending}
-                    className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors disabled:opacity-50"
-                    title="Excluir Serviço"
+                    className="p-2 text-rose-400 hover:text-white rounded-xl bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 transition-all disabled:opacity-50"
+                    title="Excluir Serviço Definitivamente"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -528,6 +532,22 @@ export const AdminServicesPage: React.FC = () => {
             </label>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+              Ordem de Exibição (Posição para os Clientes)
+            </label>
+            <input
+              type="number"
+              min="1"
+              {...register('ordem')}
+              placeholder="Ex: 1, 2, 3..."
+              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              Define a ordem numérica em que o serviço aparece no catálogo e agendamento (1 = primeiro).
+            </p>
+          </div>
+
           <div className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl">
             <div>
               <label className="text-xs font-bold text-white uppercase tracking-wider block">
@@ -549,21 +569,43 @@ export const AdminServicesPage: React.FC = () => {
             </label>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-slate-400 hover:text-white text-sm font-semibold"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl"
-            >
-              {isSubmitting ? 'Salvando...' : 'Salvar Serviço & Preços'}
-            </button>
+          <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+            {editingPlan && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(`Tem certeza que deseja excluir o serviço "${editingPlan.nome}"? Esta ação não pode ser desfeita.`)) {
+                    deleteMutation.mutate(editingPlan.id, {
+                      onSuccess: () => {
+                        setIsModalOpen(false);
+                      },
+                    });
+                  }
+                }}
+                disabled={deleteMutation.isPending}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-xs font-bold rounded-xl transition-all disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Excluir Serviço</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-3 ml-auto">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-slate-400 hover:text-white text-sm font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-600/20"
+              >
+                {isSubmitting ? 'Salvando...' : 'Salvar Serviço & Preços'}
+              </button>
+            </div>
           </div>
         </form>
       </Modal>

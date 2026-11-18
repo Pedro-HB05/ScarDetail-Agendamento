@@ -9,9 +9,9 @@ public record ServicePlanDto(
     int DuracaoMinutos,
     decimal PrecoHatch,
     decimal PrecoSedan,
+    decimal PrecoWagon,
     decimal PrecoSuv,
     decimal PrecoCamionete,
-    decimal PrecoWagon,
     bool Ativo,
     bool EhAdicional,
     int Ordem,
@@ -25,9 +25,9 @@ public record CreateServicePlanDto(
     int DuracaoMinutos,
     decimal PrecoHatch,
     decimal PrecoSedan,
+    decimal PrecoWagon,
     decimal PrecoSuv,
     decimal PrecoCamionete,
-    decimal PrecoWagon,
     bool EhAdicional = false,
     int Ordem = 0
 );
@@ -38,9 +38,9 @@ public record UpdateServicePlanDto(
     int DuracaoMinutos,
     decimal PrecoHatch,
     decimal PrecoSedan,
+    decimal PrecoWagon,
     decimal PrecoSuv,
     decimal PrecoCamionete,
-    decimal PrecoWagon,
     bool Ativo,
     bool EhAdicional = false,
     int Ordem = 0

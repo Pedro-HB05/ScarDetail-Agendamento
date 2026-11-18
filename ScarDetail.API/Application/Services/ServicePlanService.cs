@@ -281,9 +281,9 @@ public class ServicePlanService : IServicePlanService
             plan.DuracaoMinutos,
             plan.PrecoHatch,
             plan.PrecoSedan,
+            plan.PrecoWagon,
             plan.PrecoSuv,
             plan.PrecoCamionete,
-            plan.PrecoWagon,
             plan.EhAdicional,
             plan.Ordem,
             plan.Ativo
@@ -292,5 +292,5 @@ public class ServicePlanService : IServicePlanService
     }
 
     private static ServicePlanDto MapToDto(ServicePlan p) =>
-        new(p.Id, p.Nome, p.Descricao, p.DuracaoMinutos, p.PrecoHatch, p.PrecoSedan, p.PrecoSuv, p.PrecoCamionete, p.PrecoWagon, p.Ativo, p.EhAdicional, p.Ordem, p.CriadoEm, p.AtualizadoEm);
+        new(p.Id, p.Nome, p.Descricao, p.DuracaoMinutos, p.PrecoHatch, p.PrecoSedan, p.PrecoWagon, p.PrecoSuv, p.PrecoCamionete, p.Ativo, p.EhAdicional, p.Ordem, p.CriadoEm, p.AtualizadoEm);
 }
