@@ -84,47 +84,27 @@ public static class DbInitializer
         CancellationToken cancellationToken)
     {
         var existingPlans = await context.Planos.ToListAsync(cancellationToken);
-        var expectedPlans = ExpectedSeedPlans();
 
-        foreach (var expected in expectedPlans)
+        if (existingPlans.Count == 0)
+        {
+            var defaultPlans = DefaultPlans();
+            context.Planos.AddRange(defaultPlans);
+            await context.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Planos de serviço padrão criados com sucesso.");
+            return;
+        }
+
+        var existingNormalizedNames = existingPlans
+            .Select(p => StringNormalizer.NormalizeText(p.Nome))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var missingPlans = new List<ServicePlan>();
+        foreach (var expected in ExpectedSeedPlans())
         {
             var normalizedExpected = StringNormalizer.NormalizeText(expected.Nome);
-            var normalizedAliases = expected.Aliases.Select(StringNormalizer.NormalizeText).ToHashSet(StringComparer.Ordinal);
-
-            var matchingPlans = existingPlans.Where(p =>
+            if (!existingNormalizedNames.Contains(normalizedExpected))
             {
-                var normalizedCurrent = StringNormalizer.NormalizeText(p.Nome);
-                return normalizedCurrent == normalizedExpected || normalizedAliases.Contains(normalizedCurrent);
-            }).ToList();
-
-            if (matchingPlans.Count > 0)
-            {
-                var primary = matchingPlans.FirstOrDefault(p => StringNormalizer.NormalizeText(p.Nome) == normalizedExpected)
-                              ?? matchingPlans.First();
-
-                primary.Nome = expected.Nome;
-                primary.Descricao = expected.Descricao;
-                primary.DuracaoMinutos = expected.DuracaoMinutos;
-                primary.PrecoHatch = expected.PrecoHatch;
-                primary.PrecoSedan = expected.PrecoSedan;
-                primary.PrecoSuv = expected.PrecoSuv;
-                primary.PrecoCamionete = expected.PrecoCamionete;
-                primary.PrecoWagon = expected.PrecoWagon;
-                primary.EhAdicional = expected.EhAdicional;
-                // Preserva o status Ativo definido pelo administrador
-                primary.AtualizadoEm = DateTime.UtcNow;
-
-                // Tratar duplicados: desativa (soft-delete) para não violar triggers de auditoria (auditoria_planos)
-                var duplicates = matchingPlans.Where(p => p.Id != primary.Id).ToList();
-                foreach (var dup in duplicates)
-                {
-                    dup.Ativo = false;
-                    dup.AtualizadoEm = DateTime.UtcNow;
-                }
-            }
-            else
-            {
-                var newPlan = new ServicePlan
+                missingPlans.Add(new ServicePlan
                 {
                     Nome = expected.Nome,
                     Descricao = expected.Descricao,
@@ -138,13 +118,17 @@ public static class DbInitializer
                     Ativo = true,
                     CriadoEm = DateTime.UtcNow,
                     AtualizadoEm = DateTime.UtcNow
-                };
-                context.Planos.Add(newPlan);
-                existingPlans.Add(newPlan);
+                });
+                existingNormalizedNames.Add(normalizedExpected);
             }
         }
 
-        logger.LogInformation("Planos de serviço sincronizados e duplicidades saneadas com sucesso.");
+        if (missingPlans.Count > 0)
+        {
+            context.Planos.AddRange(missingPlans);
+            await context.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Adicionados {Count} planos de serviço essenciais faltantes.", missingPlans.Count);
+        }
     }
 
     private static async Task EnsureCuritibaCoverageAsync(

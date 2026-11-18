@@ -64,9 +64,7 @@ public class GlobalExceptionMiddleware
 
             default:
                 _logger.LogError(exception, "Exceção não tratada na requisição {Method} {Path}", context.Request.Method, context.Request.Path);
-                detail = _env.IsDevelopment()
-                    ? $"{exception.GetType().Name}: {exception.Message} {(exception.InnerException != null ? "-> Inner: " + exception.InnerException.Message : "")}"
-                    : "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.";
+                detail = $"{exception.GetType().Name}: {exception.Message} {(exception.InnerException != null ? "-> Inner: " + exception.InnerException.Message : "")}";
                 break;
         }
 

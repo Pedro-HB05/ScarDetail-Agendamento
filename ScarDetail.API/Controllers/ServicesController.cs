@@ -47,7 +47,7 @@ public class ServicesController : BaseApiController
     {
         var adminId = GetCurrentUserId();
         var created = await _planService.CreatePlanAsync(dto, adminId, cancellationToken);
-        return CreatedAtAction(nameof(GetServiceById), new { id = created.Id }, created);
+        return StatusCode(StatusCodes.Status201Created, created);
     }
 
     [Authorize(Roles = "Admin")]
