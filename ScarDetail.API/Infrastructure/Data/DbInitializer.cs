@@ -153,36 +153,28 @@ public static class DbInitializer
         CancellationToken cancellationToken)
     {
         var current = await context.BairrosPermitidos.ToListAsync(cancellationToken);
-        var expectedNames = CuritibaNeighborhoods
-            .Select(StringNormalizer.NormalizeText)
+        var existingNames = current
+            .Where(b => StringNormalizer.NormalizeText(b.Cidade) == "curitiba" && b.Uf.Equals("PR", StringComparison.OrdinalIgnoreCase))
+            .Select(b => b.NomeNormalizado)
             .ToHashSet(StringComparer.Ordinal);
 
-        var alreadyConfigured = current.Count == CuritibaNeighborhoods.Length &&
-            current.All(b =>
-                StringNormalizer.NormalizeText(b.Cidade) == "curitiba" &&
-                b.Uf.Equals("PR", StringComparison.OrdinalIgnoreCase) &&
-                expectedNames.Contains(b.NomeNormalizado));
+        var missingNeighborhoods = CuritibaNeighborhoods
+            .Where(name => !existingNames.Contains(StringNormalizer.NormalizeText(name)))
+            .Select(name => new PermittedNeighborhood
+            {
+                Nome = name,
+                NomeNormalizado = StringNormalizer.NormalizeText(name),
+                Cidade = "Curitiba",
+                Uf = "PR",
+                Ativo = true
+            })
+            .ToList();
 
-        if (alreadyConfigured)
+        if (missingNeighborhoods.Count > 0)
         {
-            return;
+            context.BairrosPermitidos.AddRange(missingNeighborhoods);
+            logger.LogInformation("Adicionados {Count} bairros faltantes de Curitiba/PR na cobertura de atendimento.", missingNeighborhoods.Count);
         }
-
-        if (current.Count > 0)
-        {
-            context.BairrosPermitidos.RemoveRange(current);
-        }
-
-        context.BairrosPermitidos.AddRange(CuritibaNeighborhoods.Select(name => new PermittedNeighborhood
-        {
-            Nome = name,
-            NomeNormalizado = StringNormalizer.NormalizeText(name),
-            Cidade = "Curitiba",
-            Uf = "PR",
-            Ativo = true
-        }));
-
-        logger.LogInformation("Cobertura atualizada para os 75 bairros oficiais de Curitiba/PR");
     }
 
     private record PlanSeed(

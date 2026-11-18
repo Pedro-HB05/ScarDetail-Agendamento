@@ -238,12 +238,14 @@ public class AppointmentService : IAppointmentService
 
         if (dataInicio.HasValue)
         {
-            query = query.Where(a => a.DataHoraFimOcupacao >= dataInicio.Value);
+            var dataInicioUtc = TimeZoneHelper.NormalizeToUtc(dataInicio.Value);
+            query = query.Where(a => a.DataHoraFimOcupacao >= dataInicioUtc);
         }
 
         if (dataFim.HasValue)
         {
-            query = query.Where(a => a.DataHoraInicio <= dataFim.Value);
+            var dataFimUtc = TimeZoneHelper.NormalizeToUtc(dataFim.Value);
+            query = query.Where(a => a.DataHoraInicio <= dataFimUtc);
         }
 
         if (status.HasValue)

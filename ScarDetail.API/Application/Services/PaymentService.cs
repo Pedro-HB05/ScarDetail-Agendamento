@@ -34,8 +34,8 @@ public class PaymentService : IPaymentService
         if (appt.Pagamento != null)
             throw new ConflictException("Já existe um pagamento registrado para este agendamento.");
 
-        if (appt.Status is not (AppointmentStatus.EmExecucao or AppointmentStatus.Finalizado))
-            throw new ValidationAppException("O pagamento só pode ser registrado durante ou após a execução do serviço.");
+        if (appt.Status == AppointmentStatus.Cancelado)
+            throw new ValidationAppException("Não é possível registrar pagamento para um agendamento cancelado.");
 
         if ((dto.Desconto > 0 || dto.Acrescimo > 0) && string.IsNullOrWhiteSpace(dto.JustificativaAjuste))
             throw new ValidationAppException("Informe uma justificativa para desconto ou acréscimo.");

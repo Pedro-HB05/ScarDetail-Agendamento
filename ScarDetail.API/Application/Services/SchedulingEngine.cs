@@ -174,6 +174,10 @@ public class SchedulingEngine : ISchedulingEngine
         CancellationToken cancellationToken = default)
     {
         dataHoraInicioUtc = TimeZoneHelper.NormalizeToUtc(dataHoraInicioUtc);
+        dataHoraInicioUtc = new DateTime(
+            dataHoraInicioUtc.Year, dataHoraInicioUtc.Month, dataHoraInicioUtc.Day,
+            dataHoraInicioUtc.Hour, dataHoraInicioUtc.Minute, 0, DateTimeKind.Utc);
+
         if (duracaoMinutos <= 0 || bufferMinutos < 0)
         {
             throw new ValidationAppException("Duração e deslocamento devem formar um intervalo válido.");

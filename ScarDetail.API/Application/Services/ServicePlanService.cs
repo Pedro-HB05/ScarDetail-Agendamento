@@ -195,6 +195,7 @@ public class ServicePlanService : IServicePlanService
             plan.PrecoSuv,
             plan.PrecoCamionete,
             plan.PrecoWagon,
+            plan.EhAdicional,
             plan.Ativo
         };
         return JsonSerializer.Serialize(snapshot);

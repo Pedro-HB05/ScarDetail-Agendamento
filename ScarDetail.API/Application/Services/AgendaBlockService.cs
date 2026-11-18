@@ -39,12 +39,14 @@ public class AgendaBlockService : IAgendaBlockService
 
         if (dataInicio.HasValue)
         {
-            query = query.Where(b => b.DataHoraFim >= dataInicio.Value);
+            var dataInicioUtc = TimeZoneHelper.NormalizeToUtc(dataInicio.Value);
+            query = query.Where(b => b.DataHoraFim >= dataInicioUtc);
         }
 
         if (dataFim.HasValue)
         {
-            query = query.Where(b => b.DataHoraInicio <= dataFim.Value);
+            var dataFimUtc = TimeZoneHelper.NormalizeToUtc(dataFim.Value);
+            query = query.Where(b => b.DataHoraInicio <= dataFimUtc);
         }
 
         var blocks = await query.OrderBy(b => b.DataHoraInicio).ToListAsync(cancellationToken);
