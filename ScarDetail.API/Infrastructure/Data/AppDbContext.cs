@@ -152,6 +152,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.PrecoWagon).HasColumnName("preco_wagon").HasColumnType("numeric(10,2)").IsRequired();
             entity.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true).IsRequired();
             entity.Property(e => e.EhAdicional).HasColumnName("eh_adicional").HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.Ordem).HasColumnName("ordem").HasDefaultValue(0).IsRequired();
             entity.Property(e => e.CriadoEm).HasColumnName("criado_em").HasColumnType("timestamptz").IsRequired();
             entity.Property(e => e.AtualizadoEm).HasColumnName("atualizado_em").HasColumnType("timestamptz").IsRequired();
         });

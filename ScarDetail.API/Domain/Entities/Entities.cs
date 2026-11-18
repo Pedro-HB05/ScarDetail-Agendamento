@@ -99,6 +99,7 @@ public class ServicePlan
     public decimal PrecoWagon { get; set; }
     public bool Ativo { get; set; } = true;
     public bool EhAdicional { get; set; } = false;
+    public int Ordem { get; set; } = 0;
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
     public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
 
@@ -109,9 +110,9 @@ public class ServicePlan
     {
         VehicleCategory.Hatch => PrecoHatch,
         VehicleCategory.Sedan => PrecoSedan,
+        VehicleCategory.Wagon => PrecoWagon,
         VehicleCategory.SUV => PrecoSuv,
         VehicleCategory.Camionete => PrecoCamionete,
-        VehicleCategory.Wagon => PrecoWagon,
         _ => throw new ArgumentOutOfRangeException(nameof(categoria), $"Categoria {categoria} não suportada.")
     };
 }

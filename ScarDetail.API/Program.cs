@@ -242,13 +242,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Seeds são opt-in. A aplicação nunca cria ou apaga schema automaticamente.
-if (builder.Configuration.GetValue<bool>("Database:SeedOnStartup"))
+// Garantir compatibilidade de schema e seeds
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await DbInitializer.SeedReferenceDataAsync(dbContext, logger);
+    await DbInitializer.EnsureSchemaCompatibilityAsync(dbContext, logger);
+
+    if (builder.Configuration.GetValue<bool>("Database:SeedOnStartup"))
+    {
+        await DbInitializer.SeedReferenceDataAsync(dbContext, logger);
+    }
 }
 
 app.Run();

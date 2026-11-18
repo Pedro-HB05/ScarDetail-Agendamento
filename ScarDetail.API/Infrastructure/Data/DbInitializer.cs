@@ -55,22 +55,36 @@ public static class DbInitializer
         logger.LogInformation("Dados de referência aplicados com sucesso");
     }
 
-    private static async Task EnsureSchemaCompatibilityAsync(
+    public static async Task EnsureSchemaCompatibilityAsync(
         AppDbContext context,
         ILogger logger,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         try
         {
             await context.Database.ExecuteSqlRawAsync(@"
                 ALTER TABLE planos ADD COLUMN IF NOT EXISTS eh_adicional boolean NOT NULL DEFAULT FALSE;
+                ALTER TABLE planos ADD COLUMN IF NOT EXISTS ordem integer NOT NULL DEFAULT 0;
                 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS adicional_id uuid NULL;
                 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS adicional_nome character varying(100) NULL;
                 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS valor_adicional numeric(10,2) NOT NULL DEFAULT 0;
                 ALTER TABLE agendamentos ALTER COLUMN buffer_deslocamento_minutos SET DEFAULT 0;
                 UPDATE agendamentos SET buffer_deslocamento_minutos = 0, data_hora_fim_ocupacao = data_hora_fim_servico WHERE buffer_deslocamento_minutos > 0;
             ", cancellationToken);
-            logger.LogInformation("Compatibilidade de schema verificada (colunas de adicionais e buffer 0 garantidos).");
+
+            await context.Database.ExecuteSqlRawAsync(@"
+                WITH numbered AS (
+                    SELECT id, ROW_NUMBER() OVER (ORDER BY eh_adicional ASC, nome ASC) AS rn
+                    FROM planos
+                    WHERE ordem = 0
+                )
+                UPDATE planos
+                SET ordem = numbered.rn
+                FROM numbered
+                WHERE planos.id = numbered.id AND planos.ordem = 0;
+            ", cancellationToken);
+
+            logger.LogInformation("Compatibilidade de schema verificada (colunas de adicionais, ordem e buffer 0 garantidos).");
         }
         catch (Exception ex)
         {
@@ -244,7 +258,7 @@ public static class DbInitializer
     ];
 
     public static ServicePlan[] DefaultPlans() =>
-        ExpectedSeedPlans().Select(s => new ServicePlan
+        ExpectedSeedPlans().Select((s, index) => new ServicePlan
         {
             Nome = s.Nome,
             Descricao = s.Descricao,
@@ -255,6 +269,7 @@ public static class DbInitializer
             PrecoCamionete = s.PrecoCamionete,
             PrecoWagon = s.PrecoWagon,
             EhAdicional = s.EhAdicional,
+            Ordem = index + 1,
             Ativo = true
         }).ToArray();
 }

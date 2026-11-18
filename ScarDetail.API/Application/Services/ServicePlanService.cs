@@ -15,6 +15,8 @@ public interface IServicePlanService
     Task<ServicePlanDto> CreatePlanAsync(CreateServicePlanDto dto, Guid? adminUserId = null, CancellationToken cancellationToken = default);
     Task<ServicePlanDto> UpdatePlanAsync(Guid id, UpdateServicePlanDto dto, Guid? adminUserId = null, CancellationToken cancellationToken = default);
     Task TogglePlanActiveStatusAsync(Guid id, bool active, Guid? adminUserId = null, CancellationToken cancellationToken = default);
+    Task DeletePlanAsync(Guid id, Guid? adminUserId = null, CancellationToken cancellationToken = default);
+    Task ReorderPlansAsync(ReorderServicesDto dto, Guid? adminUserId = null, CancellationToken cancellationToken = default);
     Task<List<PlanAuditDto>> GetPlanAuditHistoryAsync(Guid planId, CancellationToken cancellationToken = default);
 }
 
@@ -31,7 +33,8 @@ public class ServicePlanService : IServicePlanService
     {
         var plans = await _context.Planos.AsNoTracking()
             .Where(p => p.Ativo)
-            .OrderBy(p => p.Nome)
+            .OrderBy(p => p.Ordem)
+            .ThenBy(p => p.Nome)
             .ToListAsync(cancellationToken);
 
         return plans.Select(MapToDto).ToList();
@@ -40,7 +43,8 @@ public class ServicePlanService : IServicePlanService
     public async Task<List<ServicePlanDto>> GetAllPlansAsync(CancellationToken cancellationToken = default)
     {
         var plans = await _context.Planos.AsNoTracking()
-            .OrderBy(p => p.Nome)
+            .OrderBy(p => p.Ordem)
+            .ThenBy(p => p.Nome)
             .ToListAsync(cancellationToken);
 
         return plans.Select(MapToDto).ToList();
@@ -57,6 +61,11 @@ public class ServicePlanService : IServicePlanService
 
     public async Task<ServicePlanDto> CreatePlanAsync(CreateServicePlanDto dto, Guid? adminUserId = null, CancellationToken cancellationToken = default)
     {
+        var maxOrdem = await _context.Planos.AnyAsync(cancellationToken)
+            ? await _context.Planos.MaxAsync(p => p.Ordem, cancellationToken)
+            : 0;
+        var ordem = dto.Ordem > 0 ? dto.Ordem : maxOrdem + 1;
+
         var plan = new ServicePlan
         {
             Nome = dto.Nome.Trim(),
@@ -68,6 +77,7 @@ public class ServicePlanService : IServicePlanService
             PrecoCamionete = dto.PrecoCamionete,
             PrecoWagon = dto.PrecoWagon,
             EhAdicional = dto.EhAdicional,
+            Ordem = ordem,
             Ativo = true,
             CriadoEm = DateTime.UtcNow,
             AtualizadoEm = DateTime.UtcNow
@@ -111,6 +121,10 @@ public class ServicePlanService : IServicePlanService
         plan.PrecoCamionete = dto.PrecoCamionete;
         plan.PrecoWagon = dto.PrecoWagon;
         plan.EhAdicional = dto.EhAdicional;
+        if (dto.Ordem > 0)
+        {
+            plan.Ordem = dto.Ordem;
+        }
         plan.Ativo = dto.Ativo;
         plan.AtualizadoEm = DateTime.UtcNow;
 
@@ -162,6 +176,81 @@ public class ServicePlanService : IServicePlanService
         await _context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeletePlanAsync(Guid id, Guid? adminUserId = null, CancellationToken cancellationToken = default)
+    {
+        var plan = await _context.Planos.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        if (plan == null)
+            throw new NotFoundException("Serviço/Plano não encontrado.");
+
+        var hasAppointments = await _context.Agendamentos.AsNoTracking().AnyAsync(
+            a => a.PlanoId == id || a.AdicionalId == id,
+            cancellationToken);
+
+        if (hasAppointments)
+        {
+            throw new ValidationAppException(
+                "Não é possível excluir definitivamente este serviço porque existem agendamentos vinculados a ele no histórico. Para que ele não fique mais disponível para novos clientes, desative o serviço.");
+        }
+
+        var audits = await _context.AuditoriaPlanos.Where(a => a.PlanoId == id).ToListAsync(cancellationToken);
+        if (audits.Count > 0)
+        {
+            _context.AuditoriaPlanos.RemoveRange(audits);
+        }
+
+        _context.Planos.Remove(plan);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ReorderPlansAsync(ReorderServicesDto dto, Guid? adminUserId = null, CancellationToken cancellationToken = default)
+    {
+        var allPlans = await _context.Planos.ToListAsync(cancellationToken);
+        if (allPlans.Count == 0) return;
+
+        var planDict = allPlans.ToDictionary(p => p.Id);
+
+        if (dto.OrderedIds != null && dto.OrderedIds.Count > 0)
+        {
+            for (int i = 0; i < dto.OrderedIds.Count; i++)
+            {
+                var id = dto.OrderedIds[i];
+                if (planDict.TryGetValue(id, out var plan))
+                {
+                    plan.Ordem = i + 1;
+                    plan.AtualizadoEm = DateTime.UtcNow;
+                }
+            }
+        }
+        else if (dto.Items != null && dto.Items.Count > 0)
+        {
+            foreach (var item in dto.Items)
+            {
+                if (planDict.TryGetValue(item.Id, out var plan))
+                {
+                    plan.Ordem = item.Ordem;
+                    plan.AtualizadoEm = DateTime.UtcNow;
+                }
+            }
+        }
+
+        Guid? validAdminId = null;
+        if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
+        {
+            validAdminId = adminUserId.Value;
+        }
+
+        _context.AuditoriaPlanos.Add(new PlanAudit
+        {
+            PlanoId = allPlans[0].Id,
+            UsuarioId = validAdminId,
+            Acao = "REORDER",
+            DadosNovos = JsonSerializer.Serialize(allPlans.OrderBy(p => p.Ordem).Select(p => new { p.Id, p.Nome, p.Ordem })),
+            CriadoEm = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<List<PlanAuditDto>> GetPlanAuditHistoryAsync(Guid planId, CancellationToken cancellationToken = default)
     {
         var audits = await _context.AuditoriaPlanos.AsNoTracking()
@@ -196,11 +285,12 @@ public class ServicePlanService : IServicePlanService
             plan.PrecoCamionete,
             plan.PrecoWagon,
             plan.EhAdicional,
+            plan.Ordem,
             plan.Ativo
         };
         return JsonSerializer.Serialize(snapshot);
     }
 
     private static ServicePlanDto MapToDto(ServicePlan p) =>
-        new(p.Id, p.Nome, p.Descricao, p.DuracaoMinutos, p.PrecoHatch, p.PrecoSedan, p.PrecoSuv, p.PrecoCamionete, p.PrecoWagon, p.Ativo, p.EhAdicional, p.CriadoEm, p.AtualizadoEm);
+        new(p.Id, p.Nome, p.Descricao, p.DuracaoMinutos, p.PrecoHatch, p.PrecoSedan, p.PrecoSuv, p.PrecoCamionete, p.PrecoWagon, p.Ativo, p.EhAdicional, p.Ordem, p.CriadoEm, p.AtualizadoEm);
 }

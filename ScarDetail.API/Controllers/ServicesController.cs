@@ -98,6 +98,25 @@ public class ServicesController : BaseApiController
     }
 
     [Authorize(Roles = "Admin")]
+    [HttpDelete("admin/{id:guid}")]
+    public async Task<IActionResult> DeleteService(Guid id, CancellationToken cancellationToken)
+    {
+        var adminId = GetCurrentUserId();
+        await _planService.DeletePlanAsync(id, adminId, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("admin/reorder")]
+    [HttpPatch("admin/reorder")]
+    public async Task<IActionResult> ReorderServices([FromBody] ReorderServicesDto dto, CancellationToken cancellationToken)
+    {
+        var adminId = GetCurrentUserId();
+        await _planService.ReorderPlansAsync(dto, adminId, cancellationToken);
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
     [HttpGet("admin/{id:guid}/audits")]
     public async Task<ActionResult<List<PlanAuditDto>>> GetPlanAudits(Guid id, CancellationToken cancellationToken)
     {

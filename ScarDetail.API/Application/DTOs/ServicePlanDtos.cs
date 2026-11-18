@@ -14,6 +14,7 @@ public record ServicePlanDto(
     decimal PrecoWagon,
     bool Ativo,
     bool EhAdicional,
+    int Ordem,
     DateTime CriadoEm,
     DateTime AtualizadoEm
 );
@@ -27,7 +28,8 @@ public record CreateServicePlanDto(
     decimal PrecoSuv,
     decimal PrecoCamionete,
     decimal PrecoWagon,
-    bool EhAdicional = false
+    bool EhAdicional = false,
+    int Ordem = 0
 );
 
 public record UpdateServicePlanDto(
@@ -40,7 +42,18 @@ public record UpdateServicePlanDto(
     decimal PrecoCamionete,
     decimal PrecoWagon,
     bool Ativo,
-    bool EhAdicional = false
+    bool EhAdicional = false,
+    int Ordem = 0
+);
+
+public record ReorderServicesDto(
+    List<Guid>? OrderedIds = null,
+    List<ServiceOrderItemDto>? Items = null
+);
+
+public record ServiceOrderItemDto(
+    Guid Id,
+    int Ordem
 );
 
 public record PlanAuditDto(

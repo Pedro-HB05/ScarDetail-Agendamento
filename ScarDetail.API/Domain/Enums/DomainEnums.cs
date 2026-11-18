@@ -10,9 +10,9 @@ public enum VehicleCategory
 {
     Hatch,
     Sedan,
+    Wagon,
     SUV,
-    Camionete,
-    Wagon
+    Camionete
 }
 
 public enum AppointmentStatus
