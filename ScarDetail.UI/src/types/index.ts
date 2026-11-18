@@ -1,6 +1,6 @@
 export type UserRole = 'Admin' | 'Client';
 
-export type VehicleCategory = 'Hatch' | 'Sedan' | 'SUV' | 'Camionete' | 'Wagon';
+export type VehicleCategory = 'Hatch' | 'Sedan' | 'Wagon' | 'SUV' | 'Camionete';
 
 export type AppointmentStatus =
   | 'Pendente'
@@ -108,6 +108,7 @@ export interface ServicePlan {
   precoWagon: number;
   ativo: boolean;
   ehAdicional?: boolean;
+  ordem?: number;
   criadoEm: string;
   atualizadoEm: string;
 }
@@ -122,6 +123,12 @@ export interface CreateServicePlanInput {
   precoCamionete: number;
   precoWagon: number;
   ehAdicional?: boolean;
+  ordem?: number;
+}
+
+export interface ReorderServicesInput {
+  orderedIds?: string[];
+  items?: Array<{ id: string; ordem: number }>;
 }
 
 export interface PlanAudit {

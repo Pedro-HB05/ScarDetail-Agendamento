@@ -15,15 +15,17 @@ export const ServicesCatalogPage: React.FC = () => {
   });
 
   const displayServices = useMemo(() => {
-    return services.filter((s) => s.ativo !== false);
+    return [...services]
+      .filter((s) => s.ativo !== false)
+      .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
   }, [services]);
 
   const categories: Array<{ key: VehicleCategory; label: string }> = [
     { key: 'Hatch', label: 'Hatch' },
     { key: 'Sedan', label: 'Sedan' },
+    { key: 'Wagon', label: 'Wagon (Perua)' },
     { key: 'SUV', label: 'SUV' },
     { key: 'Camionete', label: 'Camionete' },
-    { key: 'Wagon', label: 'Wagon (Perua)' },
   ];
 
   const getPriceForCategory = (service: typeof services[0], category: VehicleCategory) => {
@@ -32,12 +34,12 @@ export const ServicesCatalogPage: React.FC = () => {
         return service.precoHatch;
       case 'Sedan':
         return service.precoSedan;
+      case 'Wagon':
+        return service.precoWagon;
       case 'SUV':
         return service.precoSuv;
       case 'Camionete':
         return service.precoCamionete;
-      case 'Wagon':
-        return service.precoWagon;
     }
   };
 
@@ -131,6 +133,10 @@ export const ServicesCatalogPage: React.FC = () => {
                         <p className="text-[10px] text-slate-500 font-bold">Sedan</p>
                         <p className="text-xs font-black text-slate-950 mt-0.5">R$ {s.precoSedan.toFixed(2)}</p>
                       </div>
+                      <div className={`p-2 rounded-xl border ${selectedCategory === 'Wagon' ? 'bg-brand-50 border-brand-500 text-brand-950' : 'bg-stone-50 border-stone-200'}`}>
+                        <p className="text-[10px] text-slate-500 font-bold">Wagon</p>
+                        <p className="text-xs font-black text-slate-950 mt-0.5">R$ {s.precoWagon.toFixed(2)}</p>
+                      </div>
                       <div className={`p-2 rounded-xl border ${selectedCategory === 'SUV' ? 'bg-brand-50 border-brand-500 text-brand-950' : 'bg-stone-50 border-stone-200'}`}>
                         <p className="text-[10px] text-slate-500 font-bold">SUV</p>
                         <p className="text-xs font-black text-slate-950 mt-0.5">R$ {s.precoSuv.toFixed(2)}</p>
@@ -138,10 +144,6 @@ export const ServicesCatalogPage: React.FC = () => {
                       <div className={`p-2 rounded-xl border ${selectedCategory === 'Camionete' ? 'bg-brand-50 border-brand-500 text-brand-950' : 'bg-stone-50 border-stone-200'}`}>
                         <p className="text-[10px] text-slate-500 font-bold">Camionete</p>
                         <p className="text-xs font-black text-slate-950 mt-0.5">R$ {s.precoCamionete.toFixed(2)}</p>
-                      </div>
-                      <div className={`p-2 rounded-xl border ${selectedCategory === 'Wagon' ? 'bg-brand-50 border-brand-500 text-brand-950' : 'bg-stone-50 border-stone-200'}`}>
-                        <p className="text-[10px] text-slate-500 font-bold">Wagon</p>
-                        <p className="text-xs font-black text-slate-950 mt-0.5">R$ {s.precoWagon.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>

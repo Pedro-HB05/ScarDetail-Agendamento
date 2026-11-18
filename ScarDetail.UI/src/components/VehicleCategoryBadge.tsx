@@ -5,9 +5,9 @@ export const VehicleCategoryBadge: React.FC<{ category: VehicleCategory }> = ({ 
   const displayNames: Record<VehicleCategory, string> = {
     Hatch: 'Hatch',
     Sedan: 'Sedan',
+    Wagon: 'Wagon (Perua)',
     SUV: 'SUV',
     Camionete: 'Camionete',
-    Wagon: 'Wagon (Perua)',
   };
 
   return (

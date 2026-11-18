@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +7,7 @@ import { planService } from '../../services/appServices';
 import type { ServicePlan } from '../../types';
 import { Modal } from '../../components/Modal';
 import { formatApiError } from '../../services/api';
-import { Plus, Edit2, Clock, History, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Edit2, Clock, History, AlertCircle, ToggleLeft, ToggleRight, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatDuration } from '../../utils/format';
@@ -31,14 +31,20 @@ export const AdminServicesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ServicePlan | null>(null);
   const [selectedPlanForAudit, setSelectedPlanForAudit] = useState<ServicePlan | null>(null);
+  const [reorderList, setReorderList] = useState<ServicePlan[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['admin-services'],
     queryFn: () => planService.getAllServicesAdmin(),
   });
+
+  const sortedServices = useMemo(() => {
+    return [...services].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  }, [services]);
 
   const { data: auditHistory = [], isLoading: loadingAudits } = useQuery({
     queryKey: ['admin-plan-audits', selectedPlanForAudit?.id],
@@ -142,6 +148,65 @@ export const AdminServicesPage: React.FC = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => planService.deleteService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services'] });
+    },
+    onError: (err) => {
+      setErrorMessage(formatApiError(err));
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: (orderedIds: string[]) => planService.reorderServices({ orderedIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
+      queryClient.invalidateQueries({ queryKey: ['active-services'] });
+    },
+    onError: (err) => {
+      setErrorMessage(formatApiError(err));
+    },
+  });
+
+  const handleMoveService = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= sortedServices.length) return;
+
+    const updated = [...sortedServices];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    reorderMutation.mutate(updated.map((s) => s.id));
+  };
+
+  const openReorderModal = () => {
+    setReorderList([...sortedServices]);
+    setIsReorderModalOpen(true);
+  };
+
+  const handleModalMoveItem = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= reorderList.length) return;
+
+    const updated = [...reorderList];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+    setReorderList(updated);
+  };
+
+  const handleSaveModalOrder = () => {
+    reorderMutation.mutate(
+      reorderList.map((s) => s.id),
+      {
+        onSuccess: () => {
+          setIsReorderModalOpen(false);
+        },
+      }
+    );
+  };
+
   const onSubmit = (data: ServiceFormData) => {
     createOrUpdateMutation.mutate(data);
   };
@@ -152,16 +217,27 @@ export const AdminServicesPage: React.FC = () => {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Serviços & Preços</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Cadastre os serviços e defina preços específicos para Hatch, Sedan, SUV, Camionete e Wagon.
+            Cadastre os serviços e defina preços específicos para Hatch, Sedan, Wagon, SUV e Camionete.
           </p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-2xl shadow-lg shadow-brand-600/20 transition-all self-start"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Novo Serviço</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={openReorderModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm rounded-2xl border border-slate-700 transition-all shadow-sm"
+            title="Reorganizar ordem dos serviços"
+          >
+            <ArrowUpDown className="w-4 h-4 text-brand-400" />
+            <span>Organizar Ordem</span>
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-2xl shadow-lg shadow-brand-600/20 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Serviço</span>
+          </button>
+        </div>
       </div>
 
       {errorMessage && !isModalOpen && (
@@ -184,7 +260,7 @@ export const AdminServicesPage: React.FC = () => {
         <div className="py-12 text-center text-slate-500 text-sm">Carregando serviços...</div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {services.map((plan) => (
+          {sortedServices.map((plan, index) => (
             <div
               key={plan.id}
               className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between"
@@ -193,6 +269,9 @@ export const AdminServicesPage: React.FC = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-brand-300 border border-slate-700">
+                        #{index + 1}
+                      </span>
                       <h3 className="text-lg font-bold text-white">{plan.nome}</h3>
                       <span
                         className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
@@ -233,16 +312,16 @@ export const AdminServicesPage: React.FC = () => {
                       <p className="text-xs font-bold text-white mt-0.5">R$ {plan.precoSedan.toFixed(2)}</p>
                     </div>
                     <div className="bg-slate-950 p-2 rounded-xl border border-slate-800/80">
+                      <p className="text-[10px] text-slate-500 font-bold">Wagon</p>
+                      <p className="text-xs font-bold text-white mt-0.5">R$ {plan.precoWagon.toFixed(2)}</p>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-800/80">
                       <p className="text-[10px] text-slate-500 font-bold">SUV</p>
                       <p className="text-xs font-bold text-white mt-0.5">R$ {plan.precoSuv.toFixed(2)}</p>
                     </div>
                     <div className="bg-slate-950 p-2 rounded-xl border border-slate-800/80">
                       <p className="text-[10px] text-slate-500 font-bold">Camionete</p>
                       <p className="text-xs font-bold text-white mt-0.5">R$ {plan.precoCamionete.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-brand-600/10 p-2 rounded-xl border border-brand-500/30">
-                      <p className="text-[10px] text-brand-400 font-bold">Wagon</p>
-                      <p className="text-xs font-bold text-white mt-0.5">R$ {plan.precoWagon.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
@@ -258,6 +337,27 @@ export const AdminServicesPage: React.FC = () => {
                 </button>
 
                 <div className="flex items-center gap-2">
+                  <div className="flex items-center border border-slate-800 rounded-xl p-0.5 bg-slate-950">
+                    <button
+                      type="button"
+                      disabled={index === 0 || reorderMutation.isPending}
+                      onClick={() => handleMoveService(index, 'up')}
+                      className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                      title="Subir posição na exibição"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === sortedServices.length - 1 || reorderMutation.isPending}
+                      onClick={() => handleMoveService(index, 'down')}
+                      className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                      title="Descer posição na exibição"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
                   <button
                     onClick={() => toggleStatusMutation.mutate({ id: plan.id, active: !plan.ativo })}
                     className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
@@ -275,6 +375,19 @@ export const AdminServicesPage: React.FC = () => {
                     title="Editar Preços e Duração"
                   >
                     <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Tem certeza que deseja excluir o serviço "${plan.nome}"? Esta ação não pode ser desfeita.`)) {
+                        deleteMutation.mutate(plan.id);
+                      }
+                    }}
+                    disabled={deleteMutation.isPending}
+                    className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors disabled:opacity-50"
+                    title="Excluir Serviço"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -363,6 +476,16 @@ export const AdminServicesPage: React.FC = () => {
               </div>
 
               <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">Preço Wagon (Perua)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register('precoWagon')}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm"
+                />
+              </div>
+
+              <div>
                 <label className="block text-[11px] font-semibold text-slate-400 mb-1">Preço SUV</label>
                 <input
                   type="number"
@@ -379,16 +502,6 @@ export const AdminServicesPage: React.FC = () => {
                   step="0.01"
                   {...register('precoCamionete')}
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm"
-                />
-              </div>
-
-              <div className="bg-brand-600/10 p-2 rounded-xl border border-brand-500/30">
-                <label className="block text-[11px] font-bold text-brand-400 mb-1">Preço Wagon (Perua)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register('precoWagon')}
-                  className="w-full px-3 py-2 bg-slate-950 border border-brand-500/50 rounded-xl text-white font-bold text-sm"
                 />
               </div>
             </div>
@@ -491,6 +604,91 @@ export const AdminServicesPage: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
+      </Modal>
+
+      {/* Modal de Reorganizar Ordem dos Serviços */}
+      <Modal
+        isOpen={isReorderModalOpen}
+        onClose={() => setIsReorderModalOpen(false)}
+        title="Organizar Ordem dos Serviços"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-400">
+            Defina a ordem exata em que os serviços serão apresentados aos clientes no catálogo e no fluxo de agendamento. Use as setas para mover os itens para cima ou para baixo.
+          </p>
+
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+            {reorderList.map((item, idx) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-xl bg-brand-500/10 text-brand-400 font-bold text-xs border border-brand-500/20">
+                    {idx + 1}
+                  </span>
+                  <div className="truncate">
+                    <p className="text-sm font-bold text-white truncate">{item.nome}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-slate-400">
+                        {item.duracaoMinutos} min
+                      </span>
+                      {item.ehAdicional && (
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          Adicional
+                        </span>
+                      )}
+                      {!item.ativo && (
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          Inativo
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={idx === 0}
+                    onClick={() => handleModalMoveItem(idx, 'up')}
+                    className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                    title="Mover para cima"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={idx === reorderList.length - 1}
+                    onClick={() => handleModalMoveItem(idx, 'down')}
+                    className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                    title="Mover para baixo"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <button
+              type="button"
+              onClick={() => setIsReorderModalOpen(false)}
+              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveModalOrder}
+              disabled={reorderMutation.isPending}
+              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-600/20 transition-all disabled:opacity-50"
+            >
+              {reorderMutation.isPending ? 'Salvando...' : 'Salvar Ordem'}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

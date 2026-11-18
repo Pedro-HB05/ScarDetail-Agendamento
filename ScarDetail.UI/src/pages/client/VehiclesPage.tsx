@@ -11,7 +11,7 @@ import { formatApiError } from '../../services/api';
 import { Car, Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 
 const vehicleSchema = z.object({
-  categoria: z.enum(['Hatch', 'Sedan', 'SUV', 'Camionete', 'Wagon']),
+  categoria: z.enum(['Hatch', 'Sedan', 'Wagon', 'SUV', 'Camionete']),
   marca: z.string().min(1, 'A marca é obrigatória'),
   modelo: z.string().min(1, 'O modelo é obrigatório'),
   ano: z.coerce.number().min(1900, 'Ano inválido').max(new Date().getFullYear() + 1, 'Ano inválido'),
@@ -218,9 +218,9 @@ export const VehiclesPage: React.FC = () => {
             >
               <option value="Hatch">Hatch</option>
               <option value="Sedan">Sedan</option>
+              <option value="Wagon">Wagon (Perua)</option>
               <option value="SUV">SUV</option>
               <option value="Camionete">Camionete</option>
-              <option value="Wagon">Wagon (Perua)</option>
             </select>
             {errors.categoria && <p className="text-xs text-rose-500 mt-1">{errors.categoria.message}</p>}
           </div>

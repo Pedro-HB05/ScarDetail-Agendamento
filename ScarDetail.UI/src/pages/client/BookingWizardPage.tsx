@@ -22,17 +22,20 @@ const steps = [
 ];
 
 const categories: Array<{ value: VehicleCategory; label: string }> = [
-  { value: 'Hatch', label: 'Hatch' }, { value: 'Sedan', label: 'Sedan' },
-  { value: 'SUV', label: 'SUV' }, { value: 'Camionete', label: 'Camionete' },
+  { value: 'Hatch', label: 'Hatch' },
+  { value: 'Sedan', label: 'Sedan' },
   { value: 'Wagon', label: 'Perua / Wagon' },
+  { value: 'SUV', label: 'SUV' },
+  { value: 'Camionete', label: 'Camionete' },
 ];
 
 const getPrice = (plan: ServicePlan | null, category?: VehicleCategory) => {
   if (!plan) return 0;
   if (category === 'Hatch') return plan.precoHatch;
+  if (category === 'Sedan') return plan.precoSedan;
+  if (category === 'Wagon') return plan.precoWagon;
   if (category === 'SUV') return plan.precoSuv;
   if (category === 'Camionete') return plan.precoCamionete;
-  if (category === 'Wagon') return plan.precoWagon;
   return plan.precoSedan;
 };
 
@@ -75,11 +78,15 @@ export const BookingWizardPage: React.FC = () => {
   });
 
   const mainServices = useMemo(() => {
-    return services.filter((s) => !s.ehAdicional);
+    return [...services]
+      .filter((s) => !s.ehAdicional)
+      .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
   }, [services]);
 
   const addonServices = useMemo(() => {
-    return services.filter((s) => s.ehAdicional);
+    return [...services]
+      .filter((s) => s.ehAdicional)
+      .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
   }, [services]);
 
   const selectedPlan = (() => {

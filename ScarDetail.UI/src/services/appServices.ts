@@ -20,6 +20,7 @@ import type {
   AgendaOverview,
   PermittedNeighborhood,
   PlanAudit,
+  ReorderServicesInput,
   ServicePlan,
   Vehicle,
 } from '../types';
@@ -109,6 +110,14 @@ export const planService = {
 
   async toggleServiceStatus(id: string, active: boolean): Promise<void> {
     await api.patch(`/services/admin/${id}/status`, { ativo: active, active });
+  },
+
+  async deleteService(id: string): Promise<void> {
+    await api.delete(`/services/admin/${id}`);
+  },
+
+  async reorderServices(data: ReorderServicesInput): Promise<void> {
+    await api.put('/services/admin/reorder', data);
   },
 
   async getPlanAudits(id: string): Promise<PlanAudit[]> {
