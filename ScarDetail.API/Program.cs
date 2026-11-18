@@ -33,7 +33,11 @@ if (connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreC
     var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
     var port = uri.Port > 0 ? uri.Port : 5432;
     var database = uri.AbsolutePath.TrimStart('/');
-    connectionString = $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SslMode=Require;Trust Server Certificate=true;";
+    connectionString = $"Host={uri.Host};Port={port};Database={database};Username={username};Password={password};SslMode=Require;Trust Server Certificate=true;Include Error Detail=true;";
+}
+else if (!connectionString.Contains("Include Error Detail", StringComparison.OrdinalIgnoreCase))
+{
+    connectionString = connectionString.TrimEnd(';') + ";Include Error Detail=true;";
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>

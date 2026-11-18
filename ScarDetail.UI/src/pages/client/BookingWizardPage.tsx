@@ -252,15 +252,16 @@ export const BookingWizardPage: React.FC = () => {
                     <Plus className="w-3.5 h-3.5" />
                     <span>Serviço Adicional / Extra (Opcional)</span>
                   </div>
-                  <h3 className="text-lg font-black text-slate-950">Deseja adicionar a Lavagem de Motor?</h3>
+                  <h3 className="text-lg font-black text-slate-950">Deseja adicionar algum serviço extra?</h3>
                   <p className="text-xs sm:text-sm text-slate-500">
-                    Você pode selecionar este adicional para somar ao serviço escolhido. A duração e o valor serão somados automaticamente.
+                    Você pode selecionar um adicional para somar ao serviço escolhido. A duração e o valor serão somados automaticamente.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   {addonServices.map((addon) => {
                     const isSelected = selectedAddon?.id === addon.id;
+                    const isMotor = addon.nome.toLowerCase().includes('motor');
                     return (
                       <div
                         key={addon.id}
@@ -278,10 +279,17 @@ export const BookingWizardPage: React.FC = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-black text-slate-900 text-base">{addon.nome}</h4>
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-200/70 text-amber-900 text-[11px] font-bold">
-                                <Sparkles className="w-3 h-3 text-amber-700" />
-                                100% a Seco (Linha Vonixx)
-                              </span>
+                              {isMotor ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-200/70 text-amber-900 text-[11px] font-bold">
+                                  <Sparkles className="w-3 h-3 text-amber-700" />
+                                  100% a Seco (Linha Vonixx)
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
+                                  <Sparkles className="w-3 h-3 text-amber-700" />
+                                  Adicional Opcional
+                                </span>
+                              )}
                             </div>
                             <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-600">
                               {addon.descricao}
@@ -299,13 +307,15 @@ export const BookingWizardPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Banner de Especificação do Motor Vonixx */}
-                        <div className="mt-3.5 flex items-start gap-2.5 rounded-xl bg-white p-3 border border-amber-200 text-xs text-slate-700 shadow-sm">
-                          <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-                          <span>
-                            <strong>Limpeza de Motor 100% a Seco com Vonixx:</strong> A lavagem de motor é realizada a seco com produto específico da Vonixx. <strong>Não é jogado água</strong> no motor, apenas este produto técnico para limpar e desengraxar com total segurança para módulos eletrônicos e componentes elétricos.
-                          </span>
-                        </div>
+                        {/* Banner específico do Motor Vonixx se for serviço de motor */}
+                        {isMotor && (
+                          <div className="mt-3.5 flex items-start gap-2.5 rounded-xl bg-white p-3 border border-amber-200 text-xs text-slate-700 shadow-sm">
+                            <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                            <span>
+                              <strong>Limpeza de Motor 100% a Seco com Vonixx:</strong> A lavagem de motor é realizada a seco com produto específico da Vonixx. <strong>Não é jogado água</strong> no motor, apenas este produto técnico para limpar e desengraxar com total segurança para módulos eletrônicos e componentes elétricos.
+                            </span>
+                          </div>
+                        )}
 
                         <div className="mt-3 flex items-center justify-between border-t border-stone-200/80 pt-2.5 text-xs">
                           <span className="flex items-center gap-1.5 font-semibold text-slate-600">
@@ -383,7 +393,7 @@ export const BookingWizardPage: React.FC = () => {
             icon={Sparkles}
             label="Serviço"
             value={selectedAddon ? `${selectedPlan.nome} + ${selectedAddon.nome}` : selectedPlan.nome}
-            detail={`Duração total: ${formatDuration(totalDuration)}${selectedAddon ? ' (inclui Lavagem de Motor a seco)' : ''}`}
+            detail={`Duração total: ${formatDuration(totalDuration)}${selectedAddon ? ` (inclui ${selectedAddon.nome})` : ''}`}
           />
           <SummaryItem icon={Car} label="Veículo" value={`${selectedVehicle.marca} ${selectedVehicle.modelo}`} detail={selectedVehicle.categoriaNomeExibicao} />
           <SummaryItem icon={CalendarDays} label="Data e horário" value={format(parseISO(selectedSlot.dataHoraInicio), "EEEE, dd 'de' MMMM", { locale: ptBR })} detail={`${selectedSlot.horarioInicioFormatado} às ${selectedSlot.horarioFimFormatado}`} />
@@ -395,9 +405,15 @@ export const BookingWizardPage: React.FC = () => {
               <ShieldCheck className="h-4 w-4 text-amber-600" />
               Adicional Selecionado: {selectedAddon.nome} (+ {formatDuration(selectedAddon.duracaoMinutos)})
             </p>
-            <p className="mt-1 text-amber-800">
-              Limpeza de motor 100% a seco com produtos da linha Vonixx — sem jato de água no cofre do motor, garantindo segurança para a eletrônica do veículo.
-            </p>
+            {selectedAddon.nome.toLowerCase().includes('motor') ? (
+              <p className="mt-1 text-amber-800">
+                Limpeza de motor 100% a seco com produtos da linha Vonixx — sem jato de água no cofre do motor, garantindo segurança para a eletrônica do veículo.
+              </p>
+            ) : selectedAddon.descricao ? (
+              <p className="mt-1 text-amber-800">
+                {selectedAddon.descricao}
+              </p>
+            ) : null}
           </div>
         )}
         <label className="mt-5 block"><span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">Alguma observação? <span className="font-normal normal-case text-slate-400">(opcional)</span></span><textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: interfone, vaga disponível, cuidados especiais..." className="w-full rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm outline-none focus:border-slate-950" /></label>
@@ -457,7 +473,7 @@ const PriceCallout = ({
         {addon && (
           <p className="text-xs font-semibold text-amber-900 mt-1 flex items-center gap-1">
             <Plus className="w-3.5 h-3.5 text-amber-700 shrink-0 inline" />
-            <span>{addon.nome} (a seco Vonixx): <strong className="font-extrabold">{addonPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
+            <span>{addon.nome}: <strong className="font-extrabold">{addonPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></span>
           </p>
         )}
       </div>

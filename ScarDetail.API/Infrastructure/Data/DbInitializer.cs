@@ -73,6 +73,21 @@ public static class DbInitializer
             ", cancellationToken);
 
             await context.Database.ExecuteSqlRawAsync(@"
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.table_constraints 
+                        WHERE constraint_name = 'auditoria_planos_plano_id_fkey' 
+                        AND table_name = 'auditoria_planos'
+                    ) THEN
+                        ALTER TABLE auditoria_planos DROP CONSTRAINT auditoria_planos_plano_id_fkey;
+                        ALTER TABLE auditoria_planos ADD CONSTRAINT auditoria_planos_plano_id_fkey 
+                            FOREIGN KEY (plano_id) REFERENCES planos(id) ON DELETE CASCADE;
+                    END IF;
+                END $$;
+            ", cancellationToken);
+
+            await context.Database.ExecuteSqlRawAsync(@"
                 WITH numbered AS (
                     SELECT id, ROW_NUMBER() OVER (ORDER BY eh_adicional ASC, nome ASC) AS rn
                     FROM planos

@@ -23,10 +23,12 @@ public interface IServicePlanService
 public class ServicePlanService : IServicePlanService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<ServicePlanService> _logger;
 
-    public ServicePlanService(AppDbContext context)
+    public ServicePlanService(AppDbContext context, ILogger<ServicePlanService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<ServicePlanDto>> GetActivePlansAsync(CancellationToken cancellationToken = default)
@@ -84,6 +86,7 @@ public class ServicePlanService : IServicePlanService
         };
 
         _context.Planos.Add(plan);
+        await _context.SaveChangesAsync(cancellationToken);
 
         Guid? validAdminId = null;
         if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
@@ -91,15 +94,23 @@ public class ServicePlanService : IServicePlanService
             validAdminId = adminUserId.Value;
         }
 
-        _context.AuditoriaPlanos.Add(new PlanAudit
+        try
         {
-            PlanoId = plan.Id,
-            UsuarioId = validAdminId,
-            Acao = "INSERT",
-            DadosNovos = SerializePlanSnapshot(plan),
-            CriadoEm = DateTime.UtcNow
-        });
-        await _context.SaveChangesAsync(cancellationToken);
+            _context.AuditoriaPlanos.Add(new PlanAudit
+            {
+                PlanoId = plan.Id,
+                Plano = plan,
+                UsuarioId = validAdminId,
+                Acao = "INSERT",
+                DadosNovos = SerializePlanSnapshot(plan),
+                CriadoEm = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Aviso ao registrar auditoria de criação do plano {PlanoId}.", plan.Id);
+        }
 
         return MapToDto(plan);
     }
@@ -128,22 +139,32 @@ public class ServicePlanService : IServicePlanService
         plan.Ativo = dto.Ativo;
         plan.AtualizadoEm = DateTime.UtcNow;
 
+        await _context.SaveChangesAsync(cancellationToken);
+
         Guid? validAdminId = null;
         if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
         {
             validAdminId = adminUserId.Value;
         }
 
-        _context.AuditoriaPlanos.Add(new PlanAudit
+        try
         {
-            PlanoId = plan.Id,
-            UsuarioId = validAdminId,
-            Acao = "UPDATE",
-            DadosAnteriores = dadosAntigos,
-            DadosNovos = SerializePlanSnapshot(plan),
-            CriadoEm = DateTime.UtcNow
-        });
-        await _context.SaveChangesAsync(cancellationToken);
+            _context.AuditoriaPlanos.Add(new PlanAudit
+            {
+                PlanoId = plan.Id,
+                Plano = plan,
+                UsuarioId = validAdminId,
+                Acao = "UPDATE",
+                DadosAnteriores = dadosAntigos,
+                DadosNovos = SerializePlanSnapshot(plan),
+                CriadoEm = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Aviso ao registrar auditoria de atualização do plano {PlanoId}.", plan.Id);
+        }
 
         return MapToDto(plan);
     }
@@ -158,22 +179,32 @@ public class ServicePlanService : IServicePlanService
         plan.Ativo = active;
         plan.AtualizadoEm = DateTime.UtcNow;
 
+        await _context.SaveChangesAsync(cancellationToken);
+
         Guid? validAdminId = null;
         if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
         {
             validAdminId = adminUserId.Value;
         }
 
-        _context.AuditoriaPlanos.Add(new PlanAudit
+        try
         {
-            PlanoId = plan.Id,
-            UsuarioId = validAdminId,
-            Acao = active ? "ACTIVATE" : "DEACTIVATE",
-            DadosAnteriores = dadosAntigos,
-            DadosNovos = SerializePlanSnapshot(plan),
-            CriadoEm = DateTime.UtcNow
-        });
-        await _context.SaveChangesAsync(cancellationToken);
+            _context.AuditoriaPlanos.Add(new PlanAudit
+            {
+                PlanoId = plan.Id,
+                Plano = plan,
+                UsuarioId = validAdminId,
+                Acao = active ? "ACTIVATE" : "DEACTIVATE",
+                DadosAnteriores = dadosAntigos,
+                DadosNovos = SerializePlanSnapshot(plan),
+                CriadoEm = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Aviso ao registrar auditoria de status do plano {PlanoId}.", plan.Id);
+        }
     }
 
     public async Task DeletePlanAsync(Guid id, Guid? adminUserId = null, CancellationToken cancellationToken = default)
@@ -192,11 +223,7 @@ public class ServicePlanService : IServicePlanService
                 "Não é possível excluir definitivamente este serviço porque existem agendamentos vinculados a ele no histórico. Para que ele não fique mais disponível para novos clientes, desative o serviço.");
         }
 
-        var audits = await _context.AuditoriaPlanos.Where(a => a.PlanoId == id).ToListAsync(cancellationToken);
-        if (audits.Count > 0)
-        {
-            _context.AuditoriaPlanos.RemoveRange(audits);
-        }
+        await _context.AuditoriaPlanos.Where(a => a.PlanoId == id).ExecuteDeleteAsync(cancellationToken);
 
         _context.Planos.Remove(plan);
         await _context.SaveChangesAsync(cancellationToken);
@@ -232,21 +259,6 @@ public class ServicePlanService : IServicePlanService
                 }
             }
         }
-
-        Guid? validAdminId = null;
-        if (adminUserId.HasValue && await _context.Usuarios.AnyAsync(u => u.Id == adminUserId.Value, cancellationToken))
-        {
-            validAdminId = adminUserId.Value;
-        }
-
-        _context.AuditoriaPlanos.Add(new PlanAudit
-        {
-            PlanoId = allPlans[0].Id,
-            UsuarioId = validAdminId,
-            Acao = "REORDER",
-            DadosNovos = JsonSerializer.Serialize(allPlans.OrderBy(p => p.Ordem).Select(p => new { p.Id, p.Nome, p.Ordem })),
-            CriadoEm = DateTime.UtcNow
-        });
 
         await _context.SaveChangesAsync(cancellationToken);
     }

@@ -81,7 +81,8 @@ export const ServicesCatalogPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayServices.map((s) => {
             const price = getPriceForCategory(s, selectedCategory);
-            const isAddon = s.ehAdicional || s.nome.toLowerCase().includes('motor');
+            const isAddon = s.ehAdicional;
+            const isMotor = s.nome.toLowerCase().includes('motor');
             return (
               <div
                 key={s.id}
@@ -95,9 +96,11 @@ export const ServicesCatalogPage: React.FC = () => {
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-bold uppercase tracking-wider">
                         Serviço Adicional / Extra
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-stone-100 text-slate-700 border border-stone-200 text-[10px] font-bold">
-                        100% a Seco (Linha Vonixx)
-                      </span>
+                      {isMotor && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-stone-100 text-slate-700 border border-stone-200 text-[10px] font-bold">
+                          100% a Seco (Linha Vonixx)
+                        </span>
+                      )}
                     </div>
                   )}
                   <div className="flex items-start justify-between gap-4">
@@ -112,7 +115,7 @@ export const ServicesCatalogPage: React.FC = () => {
 
                   <p className="text-sm text-slate-600 mt-3 leading-relaxed">{s.descricao}</p>
 
-                  {isAddon && (
+                  {isAddon && isMotor && (
                     <div className="mt-3.5 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
                       <strong className="text-amber-950 font-bold block mb-1">🛡️ Limpeza de Motor 100% a Seco com Vonixx</strong>
                       Limpeza técnica feita exclusivamente a seco com produtos específicos da Vonixx. <strong>Não é jogado água</strong> no cofre do motor, protegendo módulo ECU, sensores e componentes elétricos. Pode ser adicionado a qualquer lavagem.
