@@ -73,6 +73,27 @@ export const AdminBlocksPage: React.FC = () => {
       setErrorMessage('Informe o motivo do bloqueio.');
       return;
     }
+    if (isWholeDay) {
+      if (!dataDiaInteiro) {
+        setErrorMessage('Selecione o dia do bloqueio.');
+        return;
+      }
+    } else {
+      if (!dataInicio || !dataFim) {
+        setErrorMessage('Informe a data e hora de início e término.');
+        return;
+      }
+      const start = new Date(dataInicio).getTime();
+      const end = new Date(dataFim).getTime();
+      if (isNaN(start) || isNaN(end)) {
+        setErrorMessage('Data/hora informada é inválida.');
+        return;
+      }
+      if (start >= end) {
+        setErrorMessage('A data/hora de início deve ser anterior ao término.');
+        return;
+      }
+    }
     createBlockMutation.mutate();
   };
 

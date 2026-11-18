@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { addDays, format, parseISO } from 'date-fns';
@@ -43,8 +43,8 @@ export const BookingWizardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
-  const [selectedPlan, setSelectedPlan] = useState<ServicePlan | null>(null);
-  const [selectedAddon, setSelectedAddon] = useState<ServicePlan | null>(null);
+  const [userSelectedPlan, setSelectedPlan] = useState<ServicePlan | null>(null);
+  const [userSelectedAddon, setUserSelectedAddon] = useState<ServicePlan | null | false>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedDate, setSelectedDate] = useState(format(addDays(new Date(), 1), 'yyyy-MM-dd'));
@@ -107,37 +107,46 @@ export const BookingWizardPage: React.FC = () => {
     });
   }, [services]);
 
+  const selectedPlan = (() => {
+    if (userSelectedPlan) return userSelectedPlan;
+    const serviceId = searchParams.get('serviceId');
+    const serviceName = searchParams.get('servico');
+    if (serviceId || serviceName) {
+      const matched = services.find(
+        (s) => s.id === serviceId || (serviceName && normalize(s.nome) === normalize(serviceName))
+      );
+      if (matched && !matched.ehAdicional && !matched.nome.toLowerCase().includes('motor')) {
+        return matched;
+      }
+    }
+    return mainServices[0] || null;
+  })();
+
+  const selectedAddon = (() => {
+    if (userSelectedAddon === false) return null;
+    if (userSelectedAddon) return userSelectedAddon;
+    const serviceId = searchParams.get('serviceId');
+    const serviceName = searchParams.get('servico');
+    if (serviceId || serviceName) {
+      const matched = services.find(
+        (s) => s.id === serviceId || (serviceName && normalize(s.nome) === normalize(serviceName))
+      );
+      if (matched && (matched.ehAdicional || matched.nome.toLowerCase().includes('motor'))) {
+        return matched;
+      }
+    }
+    return null;
+  })();
+
+  const setSelectedAddon = (addon: ServicePlan | null) => {
+    setUserSelectedAddon(addon ?? false);
+  };
+
   const { data: slotsData, isLoading: loadingSlots } = useQuery({
     queryKey: ['available-slots', selectedPlan?.id, selectedDate, selectedAddon?.id],
     queryFn: () => appointmentService.getAvailableSlots(selectedPlan!.id, selectedDate, selectedAddon?.id),
     enabled: !!selectedPlan && step >= 3,
   });
-
-  useEffect(() => {
-    if (services.length === 0) return;
-    const serviceId = searchParams.get('serviceId');
-    const serviceName = searchParams.get('servico');
-    if (!serviceId && !serviceName) {
-      if (!selectedPlan && mainServices.length > 0) {
-        setSelectedPlan(mainServices[0]);
-      }
-      return;
-    }
-
-    const matchedService = services.find((service) =>
-      service.id === serviceId || (serviceName && normalize(service.nome) === normalize(serviceName))
-    );
-    if (matchedService) {
-      if (matchedService.ehAdicional || matchedService.nome.toLowerCase().includes('motor')) {
-        setSelectedAddon(matchedService);
-        if (!selectedPlan && mainServices.length > 0) {
-          setSelectedPlan(mainServices[0]);
-        }
-      } else {
-        setSelectedPlan(matchedService);
-      }
-    }
-  }, [searchParams, services, mainServices, selectedPlan]);
 
   const basePrice = getPrice(selectedPlan, selectedVehicle?.categoria);
   const addonPrice = selectedAddon ? getPrice(selectedAddon, selectedVehicle?.categoria) : 0;

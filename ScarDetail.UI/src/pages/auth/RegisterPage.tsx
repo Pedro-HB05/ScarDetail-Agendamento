@@ -74,7 +74,7 @@ export const RegisterPage: React.FC = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                 Nome Completo
               </label>
               <div className="relative">
@@ -83,14 +83,14 @@ export const RegisterPage: React.FC = () => {
                   type="text"
                   placeholder="Seu nome"
                   {...register('nome')}
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-slate-950 placeholder-slate-400 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 />
               </div>
-              {errors.nome && <p className="text-xs text-rose-400 mt-1">{errors.nome.message}</p>}
+              {errors.nome && <p className="text-xs text-rose-500 mt-1.5">{errors.nome.message}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                 E-mail
               </label>
               <div className="relative">
@@ -99,14 +99,14 @@ export const RegisterPage: React.FC = () => {
                   type="email"
                   placeholder="seu.email@exemplo.com"
                   {...register('email')}
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-slate-950 placeholder-slate-400 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 />
               </div>
-              {errors.email && <p className="text-xs text-rose-400 mt-1">{errors.email.message}</p>}
+              {errors.email && <p className="text-xs text-rose-500 mt-1.5">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                 Telefone / WhatsApp
               </label>
               <div className="relative">
@@ -115,14 +115,14 @@ export const RegisterPage: React.FC = () => {
                   type="text"
                   placeholder="(11) 99999-9999"
                   {...register('telefone')}
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-slate-950 placeholder-slate-400 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 />
               </div>
-              {errors.telefone && <p className="text-xs text-rose-400 mt-1">{errors.telefone.message}</p>}
+              {errors.telefone && <p className="text-xs text-rose-500 mt-1.5">{errors.telefone.message}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                 Senha (mínimo 8 caracteres)
               </label>
               <div className="relative">
@@ -131,14 +131,14 @@ export const RegisterPage: React.FC = () => {
                   type="password"
                   placeholder="••••••••"
                   {...register('senha')}
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-slate-950 placeholder-slate-400 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 />
               </div>
-              {errors.senha && <p className="text-xs text-rose-400 mt-1">{errors.senha.message}</p>}
+              {errors.senha && <p className="text-xs text-rose-500 mt-1.5">{errors.senha.message}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                 Confirmar Senha
               </label>
               <div className="relative">
@@ -147,11 +147,11 @@ export const RegisterPage: React.FC = () => {
                   type="password"
                   placeholder="••••••••"
                   {...register('confirmarSenha')}
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-slate-950 placeholder-slate-400 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
                 />
               </div>
               {errors.confirmarSenha && (
-                <p className="text-xs text-rose-400 mt-1">{errors.confirmarSenha.message}</p>
+                <p className="text-xs text-rose-500 mt-1.5">{errors.confirmarSenha.message}</p>
               )}
             </div>
 
@@ -171,8 +171,8 @@ export const RegisterPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
-            <p className="text-sm text-slate-400">
+          <div className="mt-8 pt-6 border-t border-stone-200 text-center">
+            <p className="text-sm text-slate-500">
               Já possui cadastro?{' '}
               <Link to={`/login${location.search}`} className="text-brand-600 font-semibold hover:underline">
                 Faça login

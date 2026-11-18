@@ -52,38 +52,10 @@ body {
   color: #475569;
 }
 
-.client-shell main .bg-slate-900 {
-  background-color: #ffffff;
-}
-
-.client-shell main .border-slate-800 {
-  border-color: #e7e5e4;
-}
-
-.client-shell main .text-white {
-  color: #0f172a;
-}
-
-.client-shell main .text-slate-400 {
-  color: #64748b;
-}
-
-.client-shell main .text-slate-300 {
-  color: #475569;
-}
-
 .client-shell .form-control {
   border-color: #e7e5e4;
   background: #fafaf9;
   color: #0f172a;
-}
-
-.client-shell main .bg-brand-600.text-white,
-.client-shell main .bg-brand-500.text-white,
-.client-shell main .bg-slate-950.text-white,
-.client-shell main .bg-emerald-600.text-white,
-.client-shell main .bg-rose-600.text-white {
-  color: #ffffff;
 }
 
 /* Custom scrollbars */

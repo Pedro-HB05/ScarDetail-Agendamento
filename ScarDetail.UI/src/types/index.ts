@@ -121,6 +121,7 @@ export interface CreateServicePlanInput {
   precoSuv: number;
   precoCamionete: number;
   precoWagon: number;
+  ehAdicional?: boolean;
 }
 
 export interface PlanAudit {

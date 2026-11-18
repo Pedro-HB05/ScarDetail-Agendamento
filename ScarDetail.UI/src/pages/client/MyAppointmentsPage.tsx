@@ -47,8 +47,13 @@ export const MyAppointmentsPage: React.FC = () => {
 
   // Query slots para reagendamento
   const { data: slotsData, isLoading: loadingSlots } = useQuery({
-    queryKey: ['available-slots-reschedule', selectedAppointment?.planoId, newDate],
-    queryFn: () => appointmentService.getAvailableSlots(selectedAppointment!.planoId, newDate),
+    queryKey: ['available-slots-reschedule', selectedAppointment?.planoId, newDate, selectedAppointment?.adicionalId],
+    queryFn: () =>
+      appointmentService.getAvailableSlots(
+        selectedAppointment!.planoId,
+        newDate,
+        selectedAppointment?.adicionalId || undefined
+      ),
     enabled: isRescheduleModalOpen && !!selectedAppointment && !!newDate,
   });
 
@@ -131,23 +136,23 @@ export const MyAppointmentsPage: React.FC = () => {
       )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Meus Agendamentos</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-950">Meus Agendamentos</h1>
+          <p className="text-sm text-slate-500 mt-1">
             Acompanhe o status do seu atendimento em tempo real, solicite reagendamento ou cancelamento.
           </p>
         </div>
       </div>
 
       {/* Tabs de Filtro de Status */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-200">
         {statusTabs.map((status) => (
           <button
             key={status}
             onClick={() => setSelectedStatus(status)}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
               selectedStatus === status
-                ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
-                : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-slate-950 text-white shadow-sm'
+                : 'bg-white border border-stone-200 text-slate-600 hover:text-slate-950 hover:bg-stone-50'
             }`}
           >
             {status === 'Todos'
@@ -165,10 +170,10 @@ export const MyAppointmentsPage: React.FC = () => {
       {isLoading ? (
         <div className="py-12 text-center text-slate-500 text-sm">Carregando agendamentos...</div>
       ) : appointments.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center max-w-md mx-auto">
-          <Calendar className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-white">Nenhum agendamento encontrado</h3>
-          <p className="text-slate-400 text-xs mt-1">
+        <div className="bg-white border border-stone-200 rounded-3xl p-12 text-center max-w-md mx-auto shadow-sm">
+          <Calendar className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+          <h3 className="text-lg font-black text-slate-950">Nenhum agendamento encontrado</h3>
+          <p className="text-slate-500 text-xs mt-1">
             {selectedStatus !== 'Todos'
               ? `Não há agendamentos com status "${selectedStatus}".`
               : 'Você ainda não possui agendamentos cadastrados.'}
@@ -179,59 +184,59 @@ export const MyAppointmentsPage: React.FC = () => {
           {appointments.map((appt) => (
             <div
               key={appt.id}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl hover:border-slate-700 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+              className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm hover:border-stone-300 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6"
             >
               <div className="space-y-3 flex-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h3 className="text-lg font-bold text-white">{appt.servicoNome}</h3>
+                  <h3 className="text-lg font-black text-slate-950">{appt.servicoNome}</h3>
                   <StatusBadge status={appt.status} size="md" />
-                  <span className="text-sm font-bold text-emerald-400">
+                  <span className="text-sm font-black text-emerald-600">
                     {appt.valorCobrado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-400 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-500 pt-1">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-brand-400" />
+                    <Clock className="w-4 h-4 text-brand-600" />
                     <span>
                       {format(parseISO(appt.dataHoraInicio), "dd 'de' MMM, yyyy 'às' HH:mm", { locale: ptBR })}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Car className="w-4 h-4 text-blue-400" />
-                    <span>
+                    <Car className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium text-slate-700">
                       {appt.veiculoMarca} {appt.veiculoModelo}
                     </span>
                     <VehicleCategoryBadge category={appt.veiculoCategoria} />
                   </div>
 
                   <div className="flex items-center gap-2 truncate">
-                    <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <span className="truncate">{appt.enderecoCompleto}</span>
+                    <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span className="truncate text-slate-600">{appt.enderecoCompleto}</span>
                   </div>
                 </div>
 
                 {appt.observacoes && (
-                  <p className="text-xs text-slate-400 italic bg-slate-950 p-2.5 rounded-xl border border-slate-800/80">
+                  <p className="text-xs text-slate-600 italic bg-stone-50 p-2.5 rounded-xl border border-stone-200">
                     "{appt.observacoes}"
                   </p>
                 )}
 
                 {appt.status === 'Cancelado' && appt.motivoCancelamento && (
-                  <p className="text-xs text-rose-400 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20">
-                    <span className="font-semibold">Motivo do cancelamento:</span> {appt.motivoCancelamento}
+                  <p className="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                    <span className="font-bold">Motivo do cancelamento:</span> {appt.motivoCancelamento}
                   </p>
                 )}
               </div>
 
               {/* Ações */}
-              <div className="flex items-center gap-2 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-800 flex-shrink-0">
+              <div className="flex items-center gap-2 pt-4 lg:pt-0 border-t lg:border-t-0 border-stone-100 flex-shrink-0">
                 <button
                   onClick={() => openDetailsModal(appt)}
-                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all"
+                  className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-slate-700 text-xs font-bold rounded-xl border border-stone-200 flex items-center gap-1.5 transition-all"
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-4 h-4 text-slate-500" />
                   <span>Histórico</span>
                 </button>
 
@@ -239,16 +244,16 @@ export const MyAppointmentsPage: React.FC = () => {
                   <>
                     <button
                       onClick={() => openRescheduleModal(appt)}
-                      className="px-3.5 py-2 bg-brand-600/10 hover:bg-brand-600/20 text-brand-400 text-xs font-semibold rounded-xl border border-brand-500/30 flex items-center gap-1.5 transition-all"
+                      className="px-3.5 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-xl border border-brand-200 flex items-center gap-1.5 transition-all"
                     >
-                      <RotateCcw className="w-4 h-4" />
+                      <RotateCcw className="w-4 h-4 text-brand-600" />
                       <span>Reagendar</span>
                     </button>
                     <button
                       onClick={() => openCancelModal(appt)}
-                      className="px-3.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl border border-rose-500/30 flex items-center gap-1.5 transition-all"
+                      className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 flex items-center gap-1.5 transition-all"
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle className="w-4 h-4 text-rose-600" />
                       <span>Cancelar</span>
                     </button>
                   </>
@@ -266,20 +271,20 @@ export const MyAppointmentsPage: React.FC = () => {
         title="Cancelar Agendamento"
       >
         {modalError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{modalError}</span>
           </div>
         )}
 
         <div className="space-y-4">
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-slate-600">
             Tem certeza que deseja cancelar o agendamento de{' '}
-            <strong className="text-white">{selectedAppointment?.servicoNome}</strong>?
+            <strong className="text-slate-950 font-bold">{selectedAppointment?.servicoNome}</strong>?
           </p>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Motivo do cancelamento (obrigatório)
             </label>
             <textarea
@@ -287,21 +292,21 @@ export const MyAppointmentsPage: React.FC = () => {
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="Informe o motivo do cancelamento..."
-              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
             />
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
+          <div className="pt-4 border-t border-stone-100 flex justify-end gap-3">
             <button
               onClick={() => setIsCancelModalOpen(false)}
-              className="px-4 py-2 text-slate-400 hover:text-white text-sm font-semibold"
+              className="px-4 py-2 text-slate-500 hover:text-slate-900 text-sm font-semibold"
             >
               Voltar
             </button>
             <button
               disabled={!cancelReason.trim() || cancelMutation.isPending}
               onClick={() => cancelMutation.mutate()}
-              className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl"
+              className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all"
             >
               {cancelMutation.isPending ? 'Cancelando...' : 'Confirmar Cancelamento'}
             </button>
@@ -317,7 +322,7 @@ export const MyAppointmentsPage: React.FC = () => {
         maxWidth="lg"
       >
         {modalError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{modalError}</span>
           </div>
@@ -325,7 +330,7 @@ export const MyAppointmentsPage: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Nova Data do Atendimento
             </label>
             <input
@@ -337,18 +342,18 @@ export const MyAppointmentsPage: React.FC = () => {
                 setNewDate(e.target.value);
                 setNewSlot(null);
               }}
-              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
               Escolha o Novo Horário
             </label>
             {loadingSlots ? (
               <p className="text-xs text-slate-500 py-4 text-center">Consultando horários disponíveis...</p>
             ) : !slotsData || slotsData.slots.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">Nenhum horário disponível para esta data.</p>
+              <p className="text-xs text-slate-500 py-4 text-center">Nenhum horário disponível para esta data.</p>
             ) : (
               <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto p-1">
                 {slotsData.slots.map((slot) => {
@@ -359,12 +364,12 @@ export const MyAppointmentsPage: React.FC = () => {
                       type="button"
                       disabled={!slot.disponivel}
                       onClick={() => setNewSlot(slot)}
-                      className={`py-2 px-2 rounded-xl text-xs font-semibold border transition-all ${
+                      className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
                         isSelected
-                          ? 'bg-brand-600 border-brand-500 text-white'
+                          ? 'bg-brand-600 border-brand-500 text-white shadow-sm'
                           : slot.disponivel
-                          ? 'bg-slate-950 border-slate-800 text-slate-200 hover:border-brand-500'
-                          : 'bg-slate-950/40 border-slate-800/40 text-slate-600 opacity-40 line-through cursor-not-allowed'
+                          ? 'bg-stone-50 border-stone-200 text-slate-800 hover:border-brand-500'
+                          : 'bg-stone-100/60 border-stone-200/50 text-stone-400 opacity-40 line-through cursor-not-allowed'
                       }`}
                     >
                       {slot.horarioInicioFormatado}
@@ -376,7 +381,7 @@ export const MyAppointmentsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Motivo do Reagendamento (opcional)
             </label>
             <input
@@ -384,21 +389,21 @@ export const MyAppointmentsPage: React.FC = () => {
               value={rescheduleReason}
               onChange={(e) => setRescheduleReason(e.target.value)}
               placeholder="Ex: Mudança de planos, imprevisto..."
-              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500"
+              className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
             />
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
+          <div className="pt-4 border-t border-stone-100 flex justify-end gap-3">
             <button
               onClick={() => setIsRescheduleModalOpen(false)}
-              className="px-4 py-2 text-slate-400 hover:text-white text-sm font-semibold"
+              className="px-4 py-2 text-slate-500 hover:text-slate-900 text-sm font-semibold"
             >
               Cancelar
             </button>
             <button
               disabled={!newSlot || rescheduleMutation.isPending}
               onClick={() => rescheduleMutation.mutate()}
-              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl"
+              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all"
             >
               {rescheduleMutation.isPending ? 'Salvando...' : 'Confirmar Reagendamento'}
             </button>
@@ -414,50 +419,50 @@ export const MyAppointmentsPage: React.FC = () => {
         maxWidth="lg"
       >
         <div className="space-y-6">
-          <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs text-slate-400">
+          <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-2 text-xs text-slate-500">
             <div className="flex justify-between">
               <span>Serviço:</span>
-              <span className="text-white font-semibold">{selectedAppointment?.servicoNome}</span>
+              <span className="text-slate-950 font-bold">{selectedAppointment?.servicoNome}</span>
             </div>
             <div className="flex justify-between">
               <span>Veículo:</span>
-              <span className="text-white font-semibold">
+              <span className="text-slate-950 font-bold">
                 {selectedAppointment?.veiculoMarca} {selectedAppointment?.veiculoModelo} ({selectedAppointment?.veiculoCategoriaExibicao})
               </span>
             </div>
             <div className="flex justify-between">
               <span>Valor Snapshot:</span>
-              <span className="text-emerald-400 font-bold">
+              <span className="text-emerald-600 font-bold">
                 {selectedAppointment?.valorCobrado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
             <div className="flex justify-between">
               <span>Endereço:</span>
-              <span className="text-white text-right max-w-xs truncate">{selectedAppointment?.enderecoCompleto}</span>
+              <span className="text-slate-900 font-medium text-right max-w-xs truncate">{selectedAppointment?.enderecoCompleto}</span>
             </div>
           </div>
 
           {/* Histórico de Transições */}
           <div>
-            <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-brand-400" />
+            <h4 className="text-sm font-bold text-slate-950 mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-brand-600" />
               <span>Linha do Tempo de Status</span>
             </h4>
 
-            <div className="space-y-3 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+            <div className="space-y-3 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-stone-200">
               {selectedAppointment?.historicoStatus.map((h, i) => (
                 <div key={h.id || i} className="relative flex items-start gap-4 pl-8">
-                  <div className="absolute left-2 top-1.5 w-3.5 h-3.5 rounded-full bg-brand-500 border-2 border-slate-900" />
-                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex-1">
+                  <div className="absolute left-2 top-1.5 w-3.5 h-3.5 rounded-full bg-brand-500 border-2 border-white shadow-sm" />
+                  <div className="bg-stone-50 p-3 rounded-xl border border-stone-200 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <StatusBadge status={h.statusNovo} size="sm" />
                       <span className="text-[10px] text-slate-500">
                         {format(parseISO(h.criadoEm), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </span>
                     </div>
-                    {h.observacao && <p className="text-xs text-slate-300 mt-1.5">{h.observacao}</p>}
+                    {h.observacao && <p className="text-xs text-slate-700 mt-1.5">{h.observacao}</p>}
                     {h.alteradoPorNome && (
-                      <p className="text-[10px] text-slate-500 mt-1">Responsável: {h.alteradoPorNome}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Responsável: {h.alteradoPorNome}</p>
                     )}
                   </div>
                 </div>

@@ -21,6 +21,7 @@ const serviceSchema = z.object({
   precoSuv: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoCamionete: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   precoWagon: z.coerce.number().min(0, 'O valor não pode ser negativo'),
+  ehAdicional: z.boolean(),
   ativo: z.boolean(),
 });
 
@@ -61,11 +62,13 @@ export const AdminServicesPage: React.FC = () => {
       precoSuv: 65,
       precoCamionete: 80,
       precoWagon: 55,
+      ehAdicional: false,
       ativo: true,
     },
   });
 
   const watchAtivo = watch('ativo');
+  const watchEhAdicional = watch('ehAdicional');
 
   const openCreateModal = () => {
     setEditingPlan(null);
@@ -78,6 +81,7 @@ export const AdminServicesPage: React.FC = () => {
       precoSuv: 65,
       precoCamionete: 80,
       precoWagon: 55,
+      ehAdicional: false,
       ativo: true,
     });
     setErrorMessage(null);
@@ -94,6 +98,7 @@ export const AdminServicesPage: React.FC = () => {
     setValue('precoSuv', plan.precoSuv);
     setValue('precoCamionete', plan.precoCamionete);
     setValue('precoWagon', plan.precoWagon);
+    setValue('ehAdicional', plan.ehAdicional ?? false);
     setValue('ativo', plan.ativo);
     setErrorMessage(null);
     setIsModalOpen(true);
@@ -109,6 +114,7 @@ export const AdminServicesPage: React.FC = () => {
       if (editingPlan) {
         return planService.updateService(editingPlan.id, {
           ...data,
+          ehAdicional: data.ehAdicional,
           ativo: data.ativo,
         });
       }
@@ -386,6 +392,27 @@ export const AdminServicesPage: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl">
+            <div>
+              <label className="text-xs font-bold text-white uppercase tracking-wider block">
+                Serviço Adicional / Opcional
+              </label>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {watchEhAdicional
+                  ? 'Este plano é um serviço adicional (ex: Lavagem de Motor a Seco) somado a outros'
+                  : 'Serviço principal padrão de estética automotiva'}
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                {...register('ehAdicional')}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
           </div>
 
           <div className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl">

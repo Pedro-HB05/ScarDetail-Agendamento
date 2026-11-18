@@ -37,10 +37,11 @@ export const OwnerSetupPage: React.FC = () => {
 
   if (isAuthenticated && isAdmin) return <Navigate to="/admin/dashboard" replace />;
 
-  const onSubmit = async ({ confirmarSenha: _, ...data }: FormData) => {
+  const onSubmit = async (data: FormData) => {
     try {
       setErrorMessage(null);
-      await registerOwner(data);
+      const { confirmarSenha: _confirmarSenha, ...payload } = data;
+      await registerOwner(payload);
       navigate('/admin/dashboard', { replace: true });
     } catch (error) {
       setErrorMessage(formatApiError(error));

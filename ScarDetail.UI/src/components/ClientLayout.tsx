@@ -1,11 +1,13 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Car, LogOut, MapPin, Sparkles, UserRound } from 'lucide-react';
+import { CalendarDays, Car, LayoutDashboard, Layers, LogOut, MapPin, Sparkles, UserRound } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 
 const clientLinks = [
+  { to: '/dashboard', label: 'Início', icon: LayoutDashboard },
   { to: '/book', label: 'Agendar', icon: Sparkles },
   { to: '/appointments', label: 'Agendamentos', icon: CalendarDays },
+  { to: '/services', label: 'Serviços', icon: Layers },
   { to: '/vehicles', label: 'Veículos', icon: Car },
   { to: '/addresses', label: 'Endereços', icon: MapPin },
 ];
@@ -17,7 +19,7 @@ export const ClientLayout: React.FC = () => {
     <div className="client-shell min-h-screen bg-stone-50 text-slate-900">
       <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <NavLink to="/book" className="flex items-center gap-3" aria-label="ScarDetail - Agendar">
+          <NavLink to="/dashboard" className="flex items-center gap-3" aria-label="ScarDetail - Início">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-amber-300 shadow-sm">
               <Sparkles className="h-5 w-5" />
             </span>
@@ -70,7 +72,7 @@ export const ClientLayout: React.FC = () => {
       </main>
 
       <nav
-        className="fixed inset-x-3 bottom-3 z-40 grid grid-cols-4 rounded-2xl border border-stone-200 bg-white/95 p-1.5 shadow-xl backdrop-blur md:hidden"
+        className="fixed inset-x-2 bottom-2 z-40 grid grid-cols-6 gap-0.5 rounded-2xl border border-stone-200 bg-white/95 p-1 shadow-xl backdrop-blur md:hidden"
         aria-label="Navegação do cliente"
       >
         {clientLinks.map(({ to, label, icon: Icon }) => (
@@ -78,13 +80,13 @@ export const ClientLayout: React.FC = () => {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold ${
-                isActive ? 'bg-slate-950 text-white' : 'text-slate-500'
+              `flex min-h-13 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-[9px] font-bold transition-colors ${
+                isActive ? 'bg-slate-950 text-white' : 'text-slate-500 hover:text-slate-900'
               }`
             }
           >
-            <Icon className="h-5 w-5" />
-            {label}
+            <Icon className="h-4 w-4" />
+            <span className="truncate max-w-[52px]">{label}</span>
           </NavLink>
         ))}
       </nav>
