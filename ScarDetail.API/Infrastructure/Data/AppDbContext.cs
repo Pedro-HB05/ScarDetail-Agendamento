@@ -173,7 +173,8 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Plano)
                   .WithMany(p => p.Auditorias)
                   .HasForeignKey(e => e.PlanoId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(e => e.Usuario)
                   .WithMany()

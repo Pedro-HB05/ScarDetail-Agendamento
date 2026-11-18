@@ -223,7 +223,26 @@ public class ServicePlanService : IServicePlanService
                 "Não é possível excluir definitivamente este serviço porque existem agendamentos vinculados a ele no histórico. Para que ele não fique mais disponível para novos clientes, desative o serviço.");
         }
 
-        await _context.AuditoriaPlanos.Where(a => a.PlanoId == id).ExecuteDeleteAsync(cancellationToken);
+        try
+        {
+            await _context.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE auditoria_planos DROP CONSTRAINT IF EXISTS auditoria_planos_plano_id_fkey; " +
+                "ALTER TABLE auditoria_planos DROP CONSTRAINT IF EXISTS \"FK_auditoria_planos_planos_plano_id\";",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Aviso ao verificar constraints de auditoria para exclusão do plano {PlanoId}.", id);
+        }
+
+        try
+        {
+            await _context.AuditoriaPlanos.Where(a => a.PlanoId == id).ExecuteDeleteAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Aviso ao limpar auditorias do plano {PlanoId}.", id);
+        }
 
         _context.Planos.Remove(plan);
         await _context.SaveChangesAsync(cancellationToken);

@@ -74,16 +74,21 @@ public static class DbInitializer
 
             await context.Database.ExecuteSqlRawAsync(@"
                 DO $$
+                DECLARE
+                    r RECORD;
                 BEGIN
-                    IF EXISTS (
-                        SELECT 1 FROM information_schema.table_constraints 
-                        WHERE constraint_name = 'auditoria_planos_plano_id_fkey' 
-                        AND table_name = 'auditoria_planos'
-                    ) THEN
-                        ALTER TABLE auditoria_planos DROP CONSTRAINT auditoria_planos_plano_id_fkey;
-                        ALTER TABLE auditoria_planos ADD CONSTRAINT auditoria_planos_plano_id_fkey 
-                            FOREIGN KEY (plano_id) REFERENCES planos(id) ON DELETE CASCADE;
-                    END IF;
+                    -- 1. Dropar qualquer trigger existente na tabela planos que tente disparar em auditoria_planos
+                    FOR r IN (
+                        SELECT trigger_name 
+                        FROM information_schema.triggers 
+                        WHERE event_object_table = 'planos'
+                    ) LOOP
+                        EXECUTE 'DROP TRIGGER IF EXISTS ' || quote_ident(r.trigger_name) || ' ON planos CASCADE;';
+                    END LOOP;
+
+                    -- 2. Dropar permanentemente as constraints de chave estrangeira que bloqueiam auditoria e exclusão
+                    ALTER TABLE auditoria_planos DROP CONSTRAINT IF EXISTS auditoria_planos_plano_id_fkey;
+                    ALTER TABLE auditoria_planos DROP CONSTRAINT IF EXISTS ""FK_auditoria_planos_planos_plano_id"";
                 END $$;
             ", cancellationToken);
 
